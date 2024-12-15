@@ -1,126 +1,98 @@
 import pygame
-import random
 import sys
 import Definitions
+from GamePlay.Table import Table
+import time
 
-# Constants
+# Initialize pygame and constants
+pygame.init()
 grid_size = Definitions.GRID_SIZE
-borad_width, board_height = Definitions.BOARD_WIDTH, Definitions.BOARD_HEIGHT
 screen_width, screen_height = Definitions.SCREEN_WIDTH, Definitions.SCREEN_HEIGHT
+prize_for_clean = Definitions.PRIZE_FOR_CLEAN
+fps = Definitions.FPS
 
-# Initialize playfield
-def initialize_playfield():
-    return [[0 for _ in range(BOARD_WIDTH)] for _ in range(BOARD_HEIGHT)]
+# Colors
+BACKGROUND_COLOR = (0, 0, 0)
+TEXT_COLOR = (255, 255, 255)
 
-# Rotate a matrix 90 degrees clockwise
-def rotate(matrix):
-    return [list(row) for row in zip(*matrix[::-1])]
+class TetrisGame:
+    def __init__(self):
+        self.screen = pygame.display.set_mode((screen_width, screen_height))
+        pygame.display.set_caption("Tetris")
+        self.clock = pygame.time.Clock()
+        self.running = True
 
-# Generate a sequence of tetromino pieces
-def generate_sequence():
-    sequence = list(_Shapes.keys())
-    random.shuffle(sequence)
-    return sequence
+        # Initialize game components
+        self.table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH)
+        self.score = 0
+        self.start_time = time.time()
 
-# Check if a move is valid
-def is_valid_move(matrix, field, row, col):
-    for r, row_data in enumerate(matrix):
-        for c, cell in enumerate(row_data):
-            if cell:
-                if (
-                    col + c < 0 or col + c >= BOARD_WIDTH or
-                    row + r >= BOARD_HEIGHT or
-                    field[row + r][col + c]
-                ):
-                    return False
-    return True
-
-# Place the tetromino on the playfield
-def place_tetromino(field, tetromino):
-    for r, row_data in enumerate(tetromino['matrix']):
-        for c, cell in enumerate(row_data):
-            if cell:
-                field[tetromino['row'] + r][tetromino['col'] + c] = tetromino['name']
-
-# Clear completed lines
-def clear_lines(field):
-    cleared_rows = 0
-    new_field = [row for row in field if any(cell == 0 for cell in row)]
-    cleared_rows = BOARD_HEIGHT - len(new_field)
-    new_field = [[0] * BOARD_WIDTH for _ in range(cleared_rows)] + new_field
-    return new_field, cleared_rows
-
-# Draw the playfield and tetromino
-def draw_field(screen, field, tetromino):
-    screen.fill((0, 0, 0))  # Clear screen
-
-    # Draw playfield
-    for r, row in enumerate(field):
-        for c, cell in enumerate(row):
-            if cell:
-                pygame.draw.rect(screen, COLORS[cell],
-                                 (c * GRID_SIZE, r * GRID_SIZE, GRID_SIZE - 1, GRID_SIZE - 1))
-
-    # Draw active tetromino
-    for r, row in enumerate(tetromino['matrix']):
-        for c, cell in enumerate(row):
-            if cell:
-                pygame.draw.rect(screen, COLORS[tetromino['name']],
-                                 ((tetromino['col'] + c) * GRID_SIZE,
-                                  (tetromino['row'] + r) * GRID_SIZE,
-                                  GRID_SIZE - 1, GRID_SIZE - 1))
-
-    pygame.display.flip()
-
-# Main game loop
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    clock = pygame.time.Clock()
-
-    playfield = initialize_playfield()
-    sequence = generate_sequence()
-    tetromino = {'name': sequence.pop(), 'matrix': _Shapes[sequence[-1]], 'row': -2, 'col': BOARD_WIDTH // 2 - 2}
-    drop_timer = 0
-
-    running = True
-    while running:
-        clock.tick(60)  # 60 FPS
-        drop_timer += 1
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        # Handle tetromino movement
+    def handle_player_input(self):
+        """
+        Handle player input for movement and rotation.
+        """
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] and is_valid_move(tetromino['matrix'], playfield, tetromino['row'], tetromino['col'] - 1):
-            tetromino['col'] -= 1
-        if keys[pygame.K_RIGHT] and is_valid_move(tetromino['matrix'], playfield, tetromino['row'], tetromino['col'] + 1):
-            tetromino['col'] += 1
-        if keys[pygame.K_DOWN] and is_valid_move(tetromino['matrix'], playfield, tetromino['row'] + 1, tetromino['col']):
-            tetromino['row'] += 1
+        if keys[pygame.K_LEFT]:
+            self.table.shift_left()
+        if keys[pygame.K_RIGHT]:
+            self.table.shift_right()
+        if keys[pygame.K_DOWN]:
+            self.table.drop()
         if keys[pygame.K_UP]:
-            rotated = rotate(tetromino['matrix'])
-            if is_valid_move(rotated, playfield, tetromino['row'], tetromino['col']):
-                tetromino['matrix'] = rotated
+            self.table.rotate()
 
-        # Drop tetromino every 30 frames
-        if drop_timer >= 30:
-            drop_timer = 0
-            if is_valid_move(tetromino['matrix'], playfield, tetromino['row'] + 1, tetromino['col']):
-                tetromino['row'] += 1
-            else:
-                place_tetromino(playfield, tetromino)
-                playfield, _ = clear_lines(playfield)
-                if not sequence:
-                    sequence = generate_sequence()
-                tetromino = {'name': sequence.pop(), 'matrix': _Shapes[sequence[-1]], 'row': -2, 'col': BOARD_WIDTH // 2 - 2}
+    def update_score(self, rows_cleared):
+        """
+        Update the score based on the number of rows cleared.
+        """
+        self.score += rows_cleared * prize_for_clean
 
-        draw_field(screen, playfield, tetromino)
+    def display_game(self):
+        """
+        Render the game board, score, and timer.
+        """
+        self.screen.fill(BACKGROUND_COLOR)
 
-    pygame.quit()
-    sys.exit()
+        # Draw the game board
+        self.table.display_board()
+
+        # Display score and timer
+        elapsed_time = int(time.time() - self.start_time)
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Score: {self.score}", True, TEXT_COLOR)
+        timer_text = font.render(f"Time: {elapsed_time}s", True, TEXT_COLOR)
+
+        self.screen.blit(score_text, (10, 10))
+        self.screen.blit(timer_text, (10, 50))
+
+        pygame.display.flip()
+
+    def game_loop(self):
+        """
+        Main game loop.
+        """
+        while self.running:
+            self.clock.tick(fps)
+
+            # Handle events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+
+            # Handle input and game logic
+            self.handle_player_input()
+            self.table.drop()
+
+            # Check for cleared rows
+            cleared_rows = self.table._clear_rows()  # Returns number of cleared rows
+            self.update_score(cleared_rows)
+
+            # display the game
+            self.display_game()
+
+        pygame.quit()
+        sys.exit()
 
 if __name__ == "__main__":
-    main()
+    game = TetrisGame()
+    game.game_loop()
