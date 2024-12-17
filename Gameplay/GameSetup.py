@@ -1,98 +1,97 @@
 import pygame
+import random
 import sys
-import Definitions
-from GamePlay.Table import Table
-import time
+from Definitions import SCREEN_WIDTH, SCREEN_HEIGHT, GRID_SIZE, BOARD_WIDTH, BOARD_HEIGHT, PLAY_WITH_AI, FPS
+from Table import Table
 
-# Initialize pygame and constants
-pygame.init()
-grid_size = Definitions.GRID_SIZE
-screen_width, screen_height = Definitions.SCREEN_WIDTH, Definitions.SCREEN_HEIGHT
-prize_for_clean = Definitions.PRIZE_FOR_CLEAN
-fps = Definitions.FPS
+# Timer
+def initialize_timer_and_score():
+    return pygame.time.get_ticks(), 0
 
-# Colors
-BACKGROUND_COLOR = (0, 0, 0)
-TEXT_COLOR = (255, 255, 255)
+def update_timer(start_time):
+    current_time = pygame.time.get_ticks()
+    elapsed_time = (current_time - start_time) // 1000
+    return elapsed_time
 
-class TetrisGame:
-    def __init__(self):
-        self.screen = pygame.display.set_mode((screen_width, screen_height))
-        pygame.display.set_caption("Tetris")
-        self.clock = pygame.time.Clock()
-        self.running = True
+#  Scoring System - visual basic thing
+def draw_timer_and_score(screen, elapsed_time, score, x_offset=0):
+    font = pygame.font.Font(None, 36)
+    timer_text = font.render(f"Time: {elapsed_time}s", True, (255, 255, 255))
+    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+    screen.blit(timer_text, (10 + x_offset, 10))
+    screen.blit(score_text, (10 + x_offset, 50))
 
-        # Initialize game components
-        self.table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH)
-        self.score = 0
-        self.start_time = time.time()
+# Abstract Interface for Players
+def handle_human_input(keys, table):
+    if keys[pygame.K_LEFT]:
+        table.shift_left()
+    if keys[pygame.K_RIGHT]:
+        table.shift_right()
+    if keys[pygame.K_DOWN]:
+        table.drop()
+    if keys[pygame.K_UP]:
+        table.rotate()
 
-    def handle_player_input(self):
-        """
-        Handle player input for movement and rotation.
-        """
+# Main Game Loop
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    clock = pygame.time.Clock()
+
+    # Initialize tables
+    human_table = Table(BOARD_HEIGHT, BOARD_WIDTH)
+    ai_table = Table(BOARD_HEIGHT, BOARD_WIDTH) if PLAY_WITH_AI else None
+
+    # Initialize scoring and timer
+    start_time, human_score = initialize_timer_and_score()
+    ai_score = 0 if PLAY_WITH_AI else None
+
+    # Spawn initial shapes
+    human_table.spawn_shape(random.choice(list(Table._shapes.values())))
+    if ai_table:
+        ai_table.spawn_shape(random.choice(list(Table._shapes.values())))
+
+    running = True
+
+     # game loop
+    while running:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Handle input for human player
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            self.table.shift_left()
-        if keys[pygame.K_RIGHT]:
-            self.table.shift_right()
-        if keys[pygame.K_DOWN]:
-            self.table.drop()
-        if keys[pygame.K_UP]:
-            self.table.rotate()
+        handle_human_input(keys, human_table)
 
-    def update_score(self, rows_cleared):
-        """
-        Update the score based on the number of rows cleared.
-        """
-        self.score += rows_cleared * prize_for_clean
+        # Update AI player if enabled
+        if PLAY_WITH_AI and ai_table:
+            # TODO: bulid AI player logic
+            ai_table.drop()
 
-    def display_game(self):
-        """
-        Render the game board, score, and timer.
-        """
-        self.screen.fill(BACKGROUND_COLOR)
+        # Update timers and scores
+        elapsed_time = update_timer(start_time)
+        human_score += 1  # Placeholder; TODO: bulid scoring based on gameplay events
+        if PLAY_WITH_AI:
+            ai_score += 1  # TODO: bulid scoring for AI score logic
 
-        # Draw the game board
-        self.table.display_board()
+        # Draw everything
+        screen.fill((0, 0, 0))
 
-        # Display score and timer
-        elapsed_time = int(time.time() - self.start_time)
-        font = pygame.font.Font(None, 36)
-        score_text = font.render(f"Score: {self.score}", True, TEXT_COLOR)
-        timer_text = font.render(f"Time: {elapsed_time}s", True, TEXT_COLOR)
+        # Draw human table
+        human_table.display_board()
+        draw_timer_and_score(screen, elapsed_time, human_score)
 
-        self.screen.blit(score_text, (10, 10))
-        self.screen.blit(timer_text, (10, 50))
+        # Draw AI table if enabled
+        if PLAY_WITH_AI and ai_table:
+            ai_table.display_board()
+            draw_timer_and_score(screen, elapsed_time, ai_score, x_offset=SCREEN_WIDTH // 2)
 
         pygame.display.flip()
 
-    def game_loop(self):
-        """
-        Main game loop.
-        """
-        while self.running:
-            self.clock.tick(fps)
-
-            # Handle events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-
-            # Handle input and game logic
-            self.handle_player_input()
-            self.table.drop()
-
-            # Check for cleared rows
-            cleared_rows = self.table._clear_rows()  # Returns number of cleared rows
-            self.update_score(cleared_rows)
-
-            # display the game
-            self.display_game()
-
-        pygame.quit()
-        sys.exit()
+    pygame.quit()
+    sys.exit()
 
 if __name__ == "__main__":
-    game = TetrisGame()
-    game.game_loop()
+    main()
