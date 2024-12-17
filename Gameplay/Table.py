@@ -1,45 +1,15 @@
+from logging import raiseExceptions
+
 import numpy as np
+from numpy.ma.core import shape
+from numpy.random import random
+
+import Definitions
+
 
 class Table:
-    _shapes = {
-        'I': np.array([
-            [0, 0, 0, 0],
-            [1, 1, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ]),
-        'J': np.array([
-            [1, 0, 0],
-            [1, 1, 1],
-            [0, 0, 0],
-        ]),
-        'L': np.array([
-            [0, 0, 1],
-            [1, 1, 1],
-            [0, 0, 0],
-        ]),
-        'O': np.array([
-            [1, 1],
-            [1, 1],
-        ]),
-        'S': np.array([
-            [0, 1, 1],
-            [1, 1, 0],
-            [0, 0, 0],
-        ]),
-        'Z': np.array([
-            [1, 1, 0],
-            [0, 1, 1],
-            [0, 0, 0],
-        ]),
-        'T': np.array([
-            [0, 1, 0],
-            [1, 1, 1],
-            [0, 0, 0],
-        ])
-    }
 
-    def __init__(self, rows=10, cols=10):
+    def __init__(self, rows=Definitions.BOARD_HEIGHT, cols=Definitions.BOARD_WIDTH):
         """
         Initialize the Tetris table.
 
@@ -51,15 +21,24 @@ class Table:
         self.board = np.zeros((rows, cols), dtype=int)
         self.current_shape = None
         self.shape_position = (0, 0)  # (row, col)
+        self.shape_generator = list(Definitions.SHAPES.keys())
+        np.random.shuffle(self.shape_generator)
+        self.shape_generator_pos = 0
+        self._shape_landed = False
+        self._rows_cleared = 0
 
-    def spawn_shape(self, shape):
+    def spawn_next_shape(self):
         """
-        Spawn a new shape on the board.
+        Spawn the next shape on the board.
+        """
+        if self.shape_generator_pos >= len(self.shape_generator):
+            np.random.shuffle(self.shape_generator)
+            self.shape_generator_pos = 0
 
-        :param shape: A 2D numpy array representing the shape.
-        """
-        self.current_shape = shape
-        self.shape_position = (0, self.cols // 2 - shape.shape[1] // 2)
+        self.current_shape = Definitions.SHAPES[self.shape_generator[self.shape_generator_pos]]
+        self.shape_generator_pos += 1
+        self.shape_position = (0, self.cols // 2 - len(self.current_shape) // 2)
+        self._shape_landed = False
 
     def rotate(self):
         """
@@ -97,6 +76,7 @@ class Table:
             if self._can_place(self.current_shape, new_position):
                 self.shape_position = new_position
             else:
+                self._shape_landed = True
                 self._place_shape()
 
     def _can_place(self, shape, position):
@@ -137,6 +117,7 @@ class Table:
         """
         full_rows = [r for r in range(self.rows) if all(self.board[r])]
         for row in full_rows:
+            self._rows_cleared += 1
             self.board[1:row + 1] = self.board[:row]
             self.board[0] = 0
 
@@ -153,19 +134,30 @@ class Table:
                         temp_board[row + r, col + c] = 1
         print(temp_board, end='\n\n')
 
+    def is_shape_landing(self):
+        """
+        Check if the current shape has landed.
+        :return: True if the current shape has landed, False otherwise.
+        """
+        return self._shape_landed
+
+    def check_for_cleared_rows(self):
+        """
+            Check how many rows have been cleared.
+            :return: Number of cleared rows.
+        """
+        temp = self._rows_cleared
+        self._rows_cleared = 0
+        return temp
 
 
 def main():
-
-    shape = np.array([[1, 1, 0],
-                      [0, 1, 1],
-                      [0, 0, 0]])
 
     # Create the Tetris table
     tetris = Table()
 
     # Spawn the shape
-    tetris.spawn_shape(shape)
+    tetris.spawn_next_shape()
 
     # Display the initial state
     tetris.display_board()
@@ -185,6 +177,20 @@ def main():
     # Shift the shape left
     tetris.shift_right()
     tetris.display_board()
+
+    for i in range(40):
+        print(i)
+        tetris.drop()
+        tetris.display_board()
+        land = tetris.is_shape_landing()
+        print(land)
+        if land:
+            tetris.spawn_next_shape()
+
+    tetris.spawn_next_shape()
+    tetris.display_board()
+
+
 
 if __name__ == '__main__':
     main()
