@@ -15,11 +15,13 @@ def update_timer(start_time):
     return elapsed_time
 
 """
- Abstract Interface for Human Players
+Abstract Interface for Human Players.
 
- :param keys: which key is pressed. 
- :param table: The table class.
- """
+:param keys: The key that was pressed
+:param table: A table Object (could be unman or ai)
+:void: activate an action from the Table class
+ 
+"""
 def handle_human_input(keys, table):
     if keys[pygame.K_LEFT]:
         table.shift_left()
@@ -36,100 +38,112 @@ def main():
     screen = pygame.display.set_mode((Definitions.SCREEN_WIDTH, Definitions.SCREEN_HEIGHT))
     clock = pygame.time.Clock()
 
-    """
-    Initialize Human table Instance and AI if needed.
-
-    :param rows: Number of rows on the board.
-    :param cols: Number of columns on the board.
-    """
-
+    # Initaialize Table Instance
     human_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH)
     ai_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if Definitions.PLAY_WITH_AI else None
 
-    """
-    Initialize scoring and timer
-    """
+    # Initialize scoring and timer
     start_time, human_score = initialize_timer_and_score()
     ai_score = 0 if Definitions.PLAY_WITH_AI else None
 
-    """
-    Spawn initial shapes
-    """
+    # Spawn initial shapes
     human_table.spawn_next_shape()
     if ai_table:
         ai_table.spawn_next_shape()
 
-    """
-    Initialize drop timers
-    """
     human_last_drop_time = pygame.time.get_ticks()
     ai_last_drop_time = pygame.time.get_ticks() if Definitions.PLAY_WITH_AI else None
 
     running = True
 
-    """
-    Game Loop
-    """
+    #Game Loop while running:
     while running:
         clock.tick(Definitions.FPS)
 
+        # Event handling
         for event in pygame.event.get():
+            print(event)
             if event.type == pygame.QUIT:
                 running = False
 
-        """
-        Automatic drop logic for human player
-        """
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:  # Rotate shape
+                    human_table.rotate()
+                elif event.key == pygame.K_DOWN:  # Immediate drop
+                    human_table.drop()
+
+        # Continuous movement with key holding to enable moving 'speed'.
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            human_table.shift_left()
+        elif keys[pygame.K_RIGHT]:
+            human_table.shift_right()
+        elif(keys[pygame.K_DOWN]):
+            human_table.drop()
+
+
+        # Automatic drop logic for human player
         current_time = pygame.time.get_ticks()
         if current_time - human_last_drop_time > Definitions.DROP_INTERVAL:
-            if not human_table.is_shape_landing():  # If shape hasn't landed yet, drop it
+            if not human_table.is_shape_landing():
                 human_table.drop()
+            # if shape landed, check for row complitment and spawn the next shape
             else:
-                # Check for full line and update score
-                if human_table.check_for_full_line():
-                    human_score += Definitions.PRIZE_FOR_CLEAN
+                lines_cleaned = human_table.check_for_cleared_rows()
+                if lines_cleaned > 0:
+                    human_score += Definitions.POINTS_PER_LINE[lines_cleaned - 1]
+                human_table.spawn_next_shape()
 
-                human_table.spawn_next_shape()  # Spawn a new shape
-
-        human_last_drop_time = current_time  # Reset drop timer
-
-        # Handle input for human player
-        keys = pygame.key.get_pressed()
-        handle_human_input(keys, human_table)
+            human_last_drop_time = current_time
 
         # Update AI player if enabled
         if Definitions.PLAY_WITH_AI and ai_table:
             if current_time - ai_last_drop_time > Definitions.DROP_INTERVAL:
-                if not ai_table.is_shape_landing():  # If shape hasn't landed yet, drop it
+                if not ai_table.is_shape_landing():
                     ai_table.drop()
                 else:
-                    # Check for full line and update AI score
-                    if ai_table.check_for_cleared_rows() > 0:
-                        ai_score += Definitions.PRIZE_FOR_CLEAN
-                    ai_table.spawn_next_shape()  # Spawn a new shape
-                ai_last_drop_time = current_time  # Reset AI drop timer
-
+                    lines_cleaned = ai_table.check_for_cleared_rows()
+                    if lines_cleaned > 0:
+                        ai_score += Definitions.POINTS_PER_LINE[lines_cleaned - 1]
+                    ai_table.spawn_next_shape()
+                ai_last_drop_time = current_time
 
         # Update timers and scores
         elapsed_time = update_timer(start_time)
 
         # Draw everything
         screen.fill((0, 0, 0))
-
-        # Draw human table
-        human_table.display_board()
+        Display.draw_grid(screen)
+        Display.draw_board(screen, human_table.board,human_table.current_shape, human_table.current_shape_name, human_table.shape_position)
         Display.draw_timer_and_score(screen, elapsed_time, human_score)
 
-        # Draw AI table if enabled
         if Definitions.PLAY_WITH_AI and ai_table:
+            # for ai player use default console to avoid time loos by rendering graphic.
             ai_table.display_board()
             Display.draw_timer_and_score(screen, elapsed_time, ai_score, x_offset=Definitions.SCREEN_WIDTH // 2)
 
         pygame.display.flip()
 
+        if human_table.game_over:
+            screen.fill((0, 0, 0))
+            Display.draw_game_over(screen,human_score,elapsed_time)
+            # Wait for a 'q' key press to quit the game
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        running = False
+
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_q:
+                            waiting = False
+                            running = False
 
     pygame.quit()
     sys.exit()
 
 if __name__ == "__main__":
     main()
+
+

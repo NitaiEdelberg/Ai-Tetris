@@ -5,6 +5,7 @@ from numpy.ma.core import shape
 from numpy.random import random
 
 import Definitions
+from Gameplay.Definitions import SHAPES
 
 
 class Table:
@@ -20,12 +21,14 @@ class Table:
         self.cols = cols
         self.board = np.zeros((rows, cols), dtype=int)
         self.current_shape = None
+        self.current_shape_name = None
         self.shape_position = (0, 0)  # (row, col)
         self.shape_generator = list(Definitions.SHAPES.keys())
         np.random.shuffle(self.shape_generator)
         self.shape_generator_pos = 0
         self._shape_landed = False
         self._rows_cleared = 0
+        self.game_over = False
 
     def spawn_next_shape(self):
         """
@@ -35,10 +38,12 @@ class Table:
             np.random.shuffle(self.shape_generator)
             self.shape_generator_pos = 0
 
-        self.current_shape = Definitions.SHAPES[self.shape_generator[self.shape_generator_pos]]
+        self.current_shape_name = self.shape_generator[self.shape_generator_pos]
+        self.current_shape = Definitions.SHAPES[self.current_shape_name]
         self.shape_generator_pos += 1
         self.shape_position = (0, self.cols // 2 - len(self.current_shape) // 2)
         self._shape_landed = False
+        self.game_over = not self._can_place(self.current_shape, self.shape_position)
 
     def rotate(self):
         """
@@ -104,6 +109,7 @@ class Table:
         Place the current shape on the board and clear full rows.
         """
         row, col = self.shape_position
+        # shape_id = list(Definitions.SHAPES.keys())[self.shape_generator_pos - 1]
         for r in range(self.current_shape.shape[0]):
             for c in range(self.current_shape.shape[1]):
                 if self.current_shape[r, c]:
@@ -140,6 +146,7 @@ class Table:
         :return: True if the current shape has landed, False otherwise.
         """
         return self._shape_landed
+        # return not self._can_place(self.current_shape, self.shape_position)
 
     def check_for_cleared_rows(self):
         """
