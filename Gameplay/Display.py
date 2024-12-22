@@ -14,7 +14,7 @@ def draw_grid(screen):
         pygame.draw.line(screen, Definitions.WHITE, (0, y), (Definitions.SCREEN_WIDTH, y))
 
 
-def draw_board(screen, board, shape=None, shape_name=None, position=(0, 0), colors=Definitions.SHAPES_COLORS):
+def draw_board(screen, board, shape=None, shape_name=None, position=(0, 0)):
     """
     Draw the board and the current shape on the screen.
 
@@ -59,7 +59,7 @@ def draw_board(screen, board, shape=None, shape_name=None, position=(0, 0), colo
                 if shape[r, c]:
                     pygame.draw.rect(
                         screen,
-                        colors.get(shape_name, Definitions.WHITE),
+                        Definitions.SHAPES_COLORS.get(shape_name),
                         pygame.Rect(
                             (shape_col + c) * Definitions.GRID_SIZE,
                             (shape_row + r) * Definitions.GRID_SIZE,
