@@ -1,12 +1,16 @@
 # Game Definitions
+from turtledemo.nim import COLOR
+
 import numpy as np
 GRID_SIZE = 32 # Size of the screen
 BOARD_WIDTH, BOARD_HEIGHT = 10, 20 # Size of the board
 SCREEN_WIDTH, SCREEN_HEIGHT = GRID_SIZE * BOARD_WIDTH, GRID_SIZE * BOARD_HEIGHT
 DROP_INTERVAL = 500  # Time in milliseconds between automatic drops
 FPS = 24 #frames per seconds
-PLAY_WITH_AI = False
-GRAPHICS_ON = False
+PLAY_WITH_AI = True
+GRAPHICS_ON = True
+PLAY_WITH_HUMAN = False
+AI_PLAY_WITH_GRAPHIC = True
 
 # Colors (RGB)
 WHITE = (255, 255, 255)
@@ -17,6 +21,7 @@ YELLOW = (254, 251, 52)
 GREEN = (83, 218, 63)
 PURPLE = (221, 10, 178)
 RED = (234, 20, 28)
+PINK = (255,51,255)
 
 # Shapes
 SHAPES = {
@@ -66,6 +71,8 @@ SHAPES_COLORS = {
         'Z': RED,
         'T': PURPLE
     }
+
+COLOR_SHAPES = [PINK,CYAN,NAVY,ORANGE,YELLOW,GREEN,RED,PURPLE]
 
 
 # Display design

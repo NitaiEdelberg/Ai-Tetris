@@ -2,6 +2,7 @@ import pygame
 import random
 import sys
 import Definitions
+from Gameplay.AIAgent import AIAgent
 from Table import Table
 import Display
 
@@ -14,14 +15,7 @@ def update_timer(start_time):
     elapsed_time = (current_time - start_time) // 1000
     return elapsed_time
 
-"""
-Abstract Interface for Human Players.
-
-:param keys: The key that was pressed
-:param table: A table Object (could be unman or ai)
-:void: activate an action from the Table class
- 
-"""
+# Handle human input
 def handle_human_input(keys, table):
     if keys[pygame.K_LEFT]:
         table.shift_left()
@@ -35,59 +29,54 @@ def handle_human_input(keys, table):
 # Main Game Loop
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((Definitions.SCREEN_WIDTH, Definitions.SCREEN_HEIGHT))
+    screen_width = Definitions.SCREEN_WIDTH * 2 if Definitions.PLAY_WITH_AI else Definitions.SCREEN_WIDTH
+    screen = pygame.display.set_mode((screen_width, Definitions.SCREEN_HEIGHT))
     clock = pygame.time.Clock()
 
-    # Initaialize Table Instance
-    human_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH)
+    # Initialize Table Instances
+    human_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if Definitions.PLAY_WITH_HUMAN else None
     ai_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if Definitions.PLAY_WITH_AI else None
+
+    # Initialize AI agent
+    ai_agent = AIAgent() if Definitions.PLAY_WITH_AI else None
 
     # Initialize scoring and timer
     start_time, human_score = initialize_timer_and_score()
     ai_score = 0 if Definitions.PLAY_WITH_AI else None
 
     # Spawn initial shapes
-    human_table.spawn_next_shape()
+    if human_table:
+        human_table.spawn_next_shape()
     if ai_table:
         ai_table.spawn_next_shape()
 
-    human_last_drop_time = pygame.time.get_ticks()
-    ai_last_drop_time = pygame.time.get_ticks() if Definitions.PLAY_WITH_AI else None
+    human_last_drop_time = pygame.time.get_ticks() if human_table else None
+    ai_last_drop_time = pygame.time.get_ticks() if ai_table else None
 
     running = True
 
-    #Game Loop while running:
+    # Game Loop
     while running:
         clock.tick(Definitions.FPS)
 
         # Event handling
         for event in pygame.event.get():
-            print(event)
             if event.type == pygame.QUIT:
                 running = False
 
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:  # Rotate shape
-                    human_table.rotate()
-                elif event.key == pygame.K_DOWN:  # Immediate drop
-                    human_table.drop()
+            if human_table and event.type == pygame.KEYDOWN:
+                handle_human_input(pygame.key.get_pressed(), human_table)
 
-        # Continuous movement with key holding to enable moving 'speed'.
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            human_table.shift_left()
-        elif keys[pygame.K_RIGHT]:
-            human_table.shift_right()
-        elif(keys[pygame.K_DOWN]):
-            human_table.drop()
-
+        # Handle continuous input for human
+        if human_table:
+            keys = pygame.key.get_pressed()
+            handle_human_input(keys, human_table)
 
         # Automatic drop logic for human player
         current_time = pygame.time.get_ticks()
-        if current_time - human_last_drop_time > Definitions.DROP_INTERVAL:
+        if human_table and current_time - human_last_drop_time > Definitions.DROP_INTERVAL:
             if not human_table.is_shape_landing():
                 human_table.drop()
-            # if shape landed, check for row complitment and spawn the next shape
             else:
                 lines_cleaned = human_table.check_for_cleared_rows()
                 if lines_cleaned > 0:
@@ -96,8 +85,9 @@ def main():
 
             human_last_drop_time = current_time
 
-        # Update AI player if enabled
-        if Definitions.PLAY_WITH_AI and ai_table:
+        # Update AI player
+        if ai_table and Definitions.PLAY_WITH_AI:
+            ai_agent.choose_action(ai_table)
             if current_time - ai_last_drop_time > Definitions.DROP_INTERVAL:
                 if not ai_table.is_shape_landing():
                     ai_table.drop()
@@ -112,38 +102,53 @@ def main():
         elapsed_time = update_timer(start_time)
 
         # Draw everything
-        screen.fill((0, 0, 0))
-        Display.draw_grid(screen)
-        Display.draw_board(screen, human_table.board,human_table.current_shape, human_table.current_shape_name, human_table.shape_position)
-        Display.draw_timer_and_score(screen, elapsed_time, human_score)
+        if Definitions.GRAPHICS_ON:
+            screen.fill((0, 0, 0))
+            Display.draw_grid(screen,0)
 
-        if Definitions.PLAY_WITH_AI and ai_table:
-            # for ai player use default console to avoid time loos by rendering graphic.
-            ai_table.display_board()
-            Display.draw_timer_and_score(screen, elapsed_time, ai_score, x_offset=Definitions.SCREEN_WIDTH // 2)
+            if human_table:
+                Display.draw_board(screen, human_table.board, human_table.current_shape, human_table.current_shape_name, human_table.shape_position, x_offset=0)
+                Display.draw_timer_and_score(screen, elapsed_time, human_score, 0)
+
+            if ai_table and Definitions.AI_PLAY_WITH_GRAPHIC:
+                Display.draw_grid(screen, Definitions.SCREEN_WIDTH)
+                Display.draw_board(screen, ai_table.board, ai_table.current_shape, ai_table.current_shape_name, ai_table.shape_position, x_offset=Definitions.SCREEN_WIDTH)
+                Display.draw_timer_and_score(screen, elapsed_time, ai_score, Definitions.SCREEN_WIDTH)
 
         pygame.display.flip()
 
-        if human_table.game_over:
-            screen.fill((0, 0, 0))
-            Display.draw_game_over(screen,human_score,elapsed_time)
-            # Wait for a 'q' key press to quit the game
+        # Check game over for human
+        if human_table and human_table.game_over:
+            Display.draw_game_over(screen, human_score, elapsed_time, 0)
+            pygame.display.flip()
+
             waiting = True
             while waiting:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         running = False
+                        waiting = False
+                    elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                        waiting = False
 
-                    elif event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_q:
-                            waiting = False
-                            running = False
+        # Check game over for AI
+        if ai_table and ai_table.game_over:
+            Display.draw_game_over(screen, ai_score, elapsed_time, Definitions.SCREEN_WIDTH)
+            pygame.display.flip()
+
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        running = False
+                        waiting = False
+                    elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                        waiting = False
 
     pygame.quit()
     sys.exit()
 
 if __name__ == "__main__":
     main()
-
-

@@ -1,0 +1,6 @@
+# created by virtualenv automatically
+./Gameplay/__pycache__/*
+pyvenv.cfg
+./venv/Include/*
+./venv/Lib/*
+./venv/Scripts/*

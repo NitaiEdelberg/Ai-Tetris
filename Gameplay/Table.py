@@ -113,7 +113,7 @@ class Table:
         for r in range(self.current_shape.shape[0]):
             for c in range(self.current_shape.shape[1]):
                 if self.current_shape[r, c]:
-                    self.board[row + r, col + c] = 1
+                    self.board[row + r, col + c] = self.current_shape[1, 1]
         self.current_shape = None
         self._clear_rows()
 
@@ -137,7 +137,7 @@ class Table:
             for r in range(self.current_shape.shape[0]):
                 for c in range(self.current_shape.shape[1]):
                     if self.current_shape[r, c]:
-                        temp_board[row + r, col + c] = 1
+                        temp_board[row + r, col + c] = self.current_shape[1, 1]
         print(temp_board, end='\n\n')
 
     def is_shape_landing(self):
@@ -156,6 +156,50 @@ class Table:
         temp = self._rows_cleared
         self._rows_cleared = 0
         return temp
+
+    def get_bumpiness(self):
+        """
+        Calculate the bumpiness of the board.
+        :return: Total bumpiness (sum of height differences between adjacent columns).
+        """
+        heights = [max((row for row, cell in enumerate(self.board[:, col]) if cell), default=0) for col in
+                   range(self.cols)]
+        return sum(abs(heights[i] - heights[i + 1]) for i in range(len(heights) - 1))
+
+    def get_max_height(self):
+        """
+        Calculate the maximum height of the board.
+        :return: Maximum column height.
+        """
+        return max(
+            (max((row for row, cell in enumerate(self.board[:, col]) if cell), default=0) for col in range(self.cols)))
+
+    def get_holes(self):
+        """
+        Count the number of holes in the board.
+        :return: Total number of holes (empty cells beneath filled cells).
+        """
+        holes = 0
+        for col in range(self.cols):
+            found_block = False
+            for row in range(self.rows):
+                if self.board[row, col] and not found_block:
+                    found_block = True
+                elif not self.board[row, col] and found_block:
+                    holes += 1
+        return holes
+
+    def get_statistics(self):
+        """
+        Return all relevant board statistics for heuristic evaluation.
+        :return: Dictionary of board statistics.
+        """
+        return {
+            'bumpiness': self.get_bumpiness(),
+            'max_height': self.get_max_height(),
+            'holes': self.get_holes(),
+            'cleared': self.check_for_cleared_rows()
+        }
 
 
 def main():
