@@ -43,7 +43,7 @@ class Table:
         self.shape_generator_pos += 1
         self.shape_position = (0, self.cols // 2 - len(self.current_shape) // 2)
         self._shape_landed = False
-        self.game_over = not self._can_place(self.current_shape, self.shape_position)
+        self.game_over = not self.can_place(self.current_shape, self.shape_position)
 
     def rotate(self):
         """
@@ -51,7 +51,7 @@ class Table:
         """
         if self.current_shape is not None:
             rotated_shape = np.rot90(self.current_shape)
-            if self._can_place(rotated_shape, self.shape_position):
+            if self.can_place(rotated_shape, self.shape_position):
                 self.current_shape = rotated_shape
 
     def shift_right(self):
@@ -60,7 +60,7 @@ class Table:
         """
         if self.current_shape is not None:
             new_position = (self.shape_position[0], self.shape_position[1] + 1)
-            if self._can_place(self.current_shape, new_position):
+            if self.can_place(self.current_shape, new_position):
                 self.shape_position = new_position
 
     def shift_left(self):
@@ -69,7 +69,7 @@ class Table:
         """
         if self.current_shape is not None:
             new_position = (self.shape_position[0], self.shape_position[1] - 1)
-            if self._can_place(self.current_shape, new_position):
+            if self.can_place(self.current_shape, new_position):
                 self.shape_position = new_position
 
     def drop(self):
@@ -78,13 +78,13 @@ class Table:
         """
         if self.current_shape is not None:
             new_position = (self.shape_position[0] + 1, self.shape_position[1])
-            if self._can_place(self.current_shape, new_position):
+            if self.can_place(self.current_shape, new_position):
                 self.shape_position = new_position
             else:
                 self._shape_landed = True
-                self._place_shape()
+                self.place_shape()
 
-    def _can_place(self, shape, position):
+    def can_place(self, shape, position):
         """
         Check if a shape can be placed at a specific position.
 
@@ -104,7 +104,7 @@ class Table:
                         return False
         return True
 
-    def _place_shape(self):
+    def place_shape(self):
         """
         Place the current shape on the board and clear full rows.
         """
