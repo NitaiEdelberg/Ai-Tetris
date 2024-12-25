@@ -1,0 +1,5 @@
+# created by virtualenv automatically
+Gameplay/__pycache__/
+.venv
+AIPlayer/__pycache__/
+.idea
