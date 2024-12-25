@@ -84,6 +84,15 @@ class Table:
                 self._shape_landed = True
                 self.place_shape()
 
+    def shape_reposition(self, position):
+        """
+        move the current shape to the specified position.
+        """
+        if self.current_shape is not None:
+            new_position = position
+            if self.can_place(self.current_shape, new_position):
+                self.shape_position = new_position
+
     def can_place(self, shape, position):
         """
         Check if a shape can be placed at a specific position.
@@ -92,6 +101,9 @@ class Table:
         :param position: A tuple (row, col) of the top-left corner.
         :return: True if the shape can be placed, False otherwise.
         """
+        if shape is None:
+            return False
+
         row, col = position
         for r in range(shape.shape[0]):
             for c in range(shape.shape[1]):

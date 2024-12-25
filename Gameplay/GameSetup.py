@@ -85,7 +85,6 @@ def main():
                 if lines_cleaned > 0:
                     human_score += Definitions.POINTS_PER_LINE[lines_cleaned - 1]
                 human_table.spawn_next_shape()
-
             human_last_drop_time = current_time
 
         # Update AI player
@@ -103,6 +102,20 @@ def main():
 
         # Update timers and scores
         elapsed_time = update_timer(start_time)
+
+        # Check game over for human
+        if human_table and human_active and human_table.game_over:
+            human_active = False
+            human_end_time = elapsed_time
+
+        # Check game over for AI
+        if ai_table and ai_active and ai_table.game_over:
+            ai_active = False
+            ai_end_time = elapsed_time
+
+        # End game if both players are inactive
+        if not human_active and not ai_active:
+            running = False
 
         # Draw everything
         if Definitions.GRAPHICS_ON:
@@ -130,20 +143,6 @@ def main():
 
 
         pygame.display.flip()
-
-        # Check game over for human
-        if human_table and human_active and human_table.game_over and human_active:
-            human_active = False
-            human_end_time = elapsed_time
-
-        # Check game over for AI
-        if ai_table and ai_active and ai_table.game_over and ai_active:
-            ai_active = False
-            ai_end_time = elapsed_time
-
-        # End game if both players are inactive
-        if not human_active and not ai_active:
-            running = False
 
     waiting = True
     while waiting:

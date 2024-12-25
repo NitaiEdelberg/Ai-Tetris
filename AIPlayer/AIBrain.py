@@ -1,5 +1,7 @@
 from collections import deque
 
+from numpy.ma.core import shape
+
 
 class AIBrain:
 
@@ -17,7 +19,8 @@ class AIBrain:
         return (
                 self.weights[0] * statistics['bumpiness'] +
                 self.weights[1] * statistics['max_height'] +
-                self.weights[2] * statistics['holes']
+                self.weights[2] * statistics['holes'] +
+                self.weights[3] * statistics['cleared']
         )
 
     def _simulate_action(self, current_position, action):
@@ -25,7 +28,6 @@ class AIBrain:
         Simulate an action and return the new piece position, orientation, and validity.
         :param current_position: Current position of the piece (row, col).
         :param action: Action to perform ('rotate', 'left', 'right', 'drop').
-        :param current_orientation: Current orientation of the piece.
         :return: (new_position, new_orientation, is_valid).
         """
         row, col = current_position
@@ -51,37 +53,43 @@ class AIBrain:
         """
         stack = deque()
         initial_position = self.table.shape_position
-        initial_orientation = 0  # Assuming 0 as the starting orientation
-        stack.append((initial_position, initial_orientation, []))  # (position, orientation, moves)
+        stack.append((initial_position, []))  # (position, moves)
 
         visited = set()
         best_score = float('-inf')
         best_moves = []
 
         while stack:
-            position, orientation, moves = stack.pop()
+            position, moves = stack.pop()
 
             # Mark as visited
-            visited.add((position, orientation))
+            visited.add(position)
 
             # Simulate dropping the piece in the current position and evaluate
-            self.table.shape_position = position
-            self.table.current_shape = self.table.current_shape  # Adjust shape based on orientation
-            if not self.table.can_place(self.table.current_shape, position):
+            self.table.shape_reposition(position)
+            if self.table.shape_position != position: # Shape couldn't be placed in the position
                 continue
 
-            # Place piece to evaluate
-            self.table.place_shape()
-            score = self._evaluate_board(self.table.board)
-            if score > best_score:
-                best_score = score
-                best_moves = moves.copy()
+            for i in range(4):
+                self.table.rotate()
+                moves.append('rotate')
+
+                if not self.table.can_place(self.table.current_shape, position):
+                    continue
+
+
+                score = self._evaluate_board(self.table.board)
+                if score > best_score:
+                    best_score = score
+                    best_moves = moves.copy()
+
+                moves.pop()
 
             # Add possible actions to the stack
-            for action in ['rotate', 'left', 'right', 'drop']:
-                new_position, new_orientation, is_valid = self._simulate_action(position, action, orientation)
-                if is_valid and (new_position, new_orientation) not in visited:
-                    stack.append((new_position, new_orientation, moves + [action]))
+            for action in ['left', 'right', 'drop']:
+                new_position, is_valid = self._simulate_action(position, action)
+                if is_valid and new_position not in visited:
+                    stack.append((new_position, moves + [action]))
 
         return best_score, best_moves
 

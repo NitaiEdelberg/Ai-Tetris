@@ -1,3 +1,5 @@
+from pickle import EMPTY_LIST
+
 from numpy.random import random
 import random
 from AIPlayer.AIBrain import AIBrain
@@ -16,12 +18,14 @@ class AIAgent:
         """
         best_score = float('-inf')
 
-        if not self.best_moves and (table.current_shape is not None):
+        if len(self.best_moves) == 0 and table.current_shape is not None:
             brain = AIBrain(table, self.weights)
-            best_score, best_moves = brain.find_best_placement()
+            best_score, self.best_moves = brain.find_best_placement()
 
+        if len(self.best_moves) == 0:
+            return
 
-        best_action = best_moves.pop()
+        best_action = self.best_moves.pop()
 
         if best_action == 'rotate':
             table.rotate()
