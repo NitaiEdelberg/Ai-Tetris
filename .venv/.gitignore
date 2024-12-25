@@ -1,0 +1,7 @@
+# created by virtualenv automatically
+./Gameplay/__pycache__/
+./venv/Include/
+./venv/Lib/
+./venv/Scripts/
+pyvenv.cfg
+./AIPlayer/__pycache__/

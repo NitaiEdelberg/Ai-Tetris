@@ -9,15 +9,15 @@ DROP_INTERVAL = 500  # Time in milliseconds between automatic drops
 FPS = 24 #frames per seconds
 PLAY_WITH_AI = True
 GRAPHICS_ON = True
-PLAY_WITH_HUMAN = False
+PLAY_WITH_HUMAN = True
 AI_PLAY_WITH_GRAPHIC = True
 
 # Colors (RGB)
 WHITE = (255, 255, 255)
 CYAN = (1, 237, 250)
 NAVY = (46, 46, 132)
-ORANGE = (255, 200, 46)
-YELLOW = (254, 251, 52)
+ORANGE = (220, 88, 42)
+YELLOW = (254,221,0)
 GREEN = (83, 218, 63)
 PURPLE = (221, 10, 178)
 RED = (234, 20, 28)

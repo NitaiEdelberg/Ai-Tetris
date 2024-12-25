@@ -113,7 +113,10 @@ class Table:
         for r in range(self.current_shape.shape[0]):
             for c in range(self.current_shape.shape[1]):
                 if self.current_shape[r, c]:
-                    self.board[row + r, col + c] = self.current_shape[1, 1]
+                    if self.current_shape_name == 'I':
+                        self.board[row + r, col + c] = 1
+                    else:
+                        self.board[row + r, col + c] = self.current_shape[1, 1]
         self.current_shape = None
         self._clear_rows()
 
@@ -137,7 +140,10 @@ class Table:
             for r in range(self.current_shape.shape[0]):
                 for c in range(self.current_shape.shape[1]):
                     if self.current_shape[r, c]:
-                        temp_board[row + r, col + c] = self.current_shape[1, 1]
+                        if self.current_shape_name == 'I':
+                            temp_board[row + r, col + c] = 1
+                        else:
+                            temp_board[row + r, col + c] = self.current_shape[1, 1]
         print(temp_board, end='\n\n')
 
     def is_shape_landing(self):
