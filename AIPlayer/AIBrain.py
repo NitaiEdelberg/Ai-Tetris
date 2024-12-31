@@ -62,8 +62,11 @@ class AIBrain:
             position, moves = stack.pop()
             current_shape_orientation = self.table.shape_orientation
 
+            row, col = int(position[0]), int(position[1])
+            orientation = int(self.table.shape_orientation)
             # Mark as visited
-            visited.add((position, current_shape_orientation))
+            visited.add(((row, col), orientation))
+
             # Simulate dropping the piece in the current position and evaluate
             self.table.shape_reposition(position, current_shape_orientation)
             if self.table.shape_position != position: # Shape couldn't be placed in the position
@@ -73,10 +76,10 @@ class AIBrain:
             for action in ['left', 'right', 'drop', 'rotate']:
                 new_position, new_rotation = self._simulate_action(position, action)
                 # Add to stack only if it's a new move
-                if new_position not in visited:
+                if (new_position, new_rotation) not in visited:
                     stack.append((new_position, moves + [action]))
                     # Check score if shape had landed
-                    if action == 'drop' and self.table.is_shape_landing():
+                    if self.table.is_shape_landing():
                         score = self._evaluate_board(self.table.board)
                         if score > best_score:
                             best_score = score

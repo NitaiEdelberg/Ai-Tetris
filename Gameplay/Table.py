@@ -105,12 +105,14 @@ class Table:
             old_orientation = self.shape_orientation
             old_position = self.shape_position
 
-            # 3. Rotate the current shape the required number of times
+            # 3. Perform the required number of 90° rotations, storing the result each time
+            rotated_shape = self.current_shape
             for _ in range(rotations_needed):
-                np.rot90(self.current_shape)
+                rotated_shape = np.rot90(rotated_shape)
 
             # 4. Check if we can place the newly rotated shape at new_position
-            if self.can_place(self.current_shape, new_position):
+            if self.can_place(rotated_shape, new_position):
+                self.current_shape = rotated_shape
                 self.shape_position = new_position
                 self.shape_orientation = new_shape_orientation
             else:
