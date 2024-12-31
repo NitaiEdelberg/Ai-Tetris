@@ -1,5 +1,5 @@
 from pickle import EMPTY_LIST
-
+import copy
 from numpy.random import random
 import random
 from AIPlayer.AIBrain import AIBrain
@@ -19,19 +19,19 @@ class AIAgent:
         best_score = float('-inf')
 
         if len(self.best_moves) == 0 and table.current_shape is not None:
-            brain = AIBrain(table, self.weights)
+            brain = AIBrain(copy.deepcopy(table), self.weights)
             best_score, self.best_moves = brain.find_best_placement()
 
         if len(self.best_moves) == 0:
             return
 
         best_action = self.best_moves.pop()
-
+        # print(best_action)
         if best_action == 'rotate':
             table.rotate()
-        elif best_action == 'shift_left':
+        elif best_action == 'left':
             table.shift_left()
-        elif best_action == 'shift_right':
+        elif best_action == 'right':
             table.shift_right()
         elif best_action == 'drop':
             table.drop()

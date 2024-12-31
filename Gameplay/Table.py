@@ -1,7 +1,7 @@
 from logging import raiseExceptions
 
 import numpy as np
-from numpy.ma.core import shape
+from numpy.ma.core import shape, count
 from numpy.random import random
 
 import Definitions
@@ -29,6 +29,7 @@ class Table:
         self._shape_landed = False
         self._rows_cleared = 0
         self.game_over = False
+        self.shape_orientation = 0
 
     def spawn_next_shape(self):
         """
@@ -42,6 +43,7 @@ class Table:
         self.current_shape = Definitions.SHAPES[self.current_shape_name]
         self.shape_generator_pos += 1
         self.shape_position = (0, self.cols // 2 - len(self.current_shape) // 2)
+        self.shape_orientation = 0
         self._shape_landed = False
         self.game_over = not self.can_place(self.current_shape, self.shape_position)
 
@@ -51,6 +53,7 @@ class Table:
         """
         if self.current_shape is not None:
             rotated_shape = np.rot90(self.current_shape)
+            self.shape_orientation = (self.shape_orientation + 90) % 360
             if self.can_place(rotated_shape, self.shape_position):
                 self.current_shape = rotated_shape
 
@@ -84,14 +87,37 @@ class Table:
                 self._shape_landed = True
                 self.place_shape()
 
-    def shape_reposition(self, position):
+    def shape_reposition(self, new_position, new_shape_orientation):
         """
-        move the current shape to the specified position.
+        Move the current shape to the specified position and orientation.
+        :param new_position: (row, col) to which the shape should be moved.
+        :param new_shape_orientation: An integer (0, 90, 180, 270) denoting the target orientation.
         """
         if self.current_shape is not None:
-            new_position = position
+            # 1. Calculate how many 90° rotations we need
+            #    E.g., if current shape_orientation=90 and new_shape_orientation=270,
+            #    offset = 270 - 90 = 180; times = 180 // 90 = 2
+            offset_degrees = (new_shape_orientation - self.shape_orientation) % 360
+            rotations_needed = offset_degrees // 90
+
+            # 2. Save old shape/orientation/position to revert if necessary
+            old_shape = self.current_shape.copy()
+            old_orientation = self.shape_orientation
+            old_position = self.shape_position
+
+            # 3. Rotate the current shape the required number of times
+            for _ in range(rotations_needed):
+                np.rot90(self.current_shape)
+
+            # 4. Check if we can place the newly rotated shape at new_position
             if self.can_place(self.current_shape, new_position):
                 self.shape_position = new_position
+                self.shape_orientation = new_shape_orientation
+            else:
+                # 5. If placement is invalid, revert
+                self.current_shape = old_shape
+                self.shape_position = old_position
+                self.shape_orientation = old_orientation
 
     def can_place(self, shape, position):
         """
@@ -178,32 +204,53 @@ class Table:
     def get_bumpiness(self):
         """
         Calculate the bumpiness of the board.
+        Bumpiness is the total difference in heights between adjacent columns.
+
         :return: Total bumpiness (sum of height differences between adjacent columns).
         """
-        heights = [max((row for row, cell in enumerate(self.board[:, col]) if cell), default=0) for col in
-                   range(self.cols)]
-        return sum(abs(heights[i] - heights[i + 1]) for i in range(len(heights) - 1))
+        column_heights = []
+        for col in range(self.cols):
+            for row in range(len(self.board)):
+                if self.board[row][col] != 0:
+                    column_heights.append(self.rows - row)
+                    break
+            else:
+                column_heights.append(0)
 
-    def get_max_height(self):
+        bumpiness = 0
+        for i in range(len(column_heights) - 1):
+            bumpiness += abs(column_heights[i] - column_heights[i + 1])
+
+        return bumpiness
+
+    def get_aggregate_height(self):
         """
-        Calculate the maximum height of the board.
+        Calculate the aggregate height of the board.
         :return: Maximum column height.
         """
-        return max(
-            (max((row for row, cell in enumerate(self.board[:, col]) if cell), default=0) for col in range(self.cols)))
+        aggregate_height = 0
+
+        for col in range(self.cols):
+            for row in range(self.rows):
+                if self.board[row][col] != 0:
+                    aggregate_height += self.rows - row
+                    break
+
+        return aggregate_height
+
 
     def get_holes(self):
         """
         Count the number of holes in the board.
-        :return: Total number of holes (empty cells beneath filled cells).
+        :return: Total number of holes (empty cells beneath at least one filled cell).
         """
         holes = 0
         for col in range(self.cols):
             found_block = False
             for row in range(self.rows):
-                if self.board[row, col] and not found_block:
+                if self.board[row, col] != 0 and not found_block:
                     found_block = True
-                elif not self.board[row, col] and found_block:
+                elif self.board[row, col] == 0 and found_block:
                     holes += 1
         return holes
 
@@ -214,9 +261,9 @@ class Table:
         """
         return {
             'bumpiness': self.get_bumpiness(),
-            'max_height': self.get_max_height(),
+            'max_height': self.get_aggregate_height(),
             'holes': self.get_holes(),
-            'cleared': self.check_for_cleared_rows()
+            'cleared': self._rows_cleared
         }
 
 

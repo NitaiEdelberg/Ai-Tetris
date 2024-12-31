@@ -1,5 +1,4 @@
 from collections import deque
-
 from numpy.ma.core import shape
 
 
@@ -43,8 +42,8 @@ class AIBrain:
             self.table.drop()
 
         new_position = self.table.shape_position
-        is_valid = self.table.can_place(self.table.current_shape, new_position)
-        return new_position, is_valid
+        # is_valid = self.table.can_place(self.table.current_shape, new_position)
+        return new_position, self.table.shape_orientation
 
     def find_best_placement(self):
         """
@@ -61,36 +60,33 @@ class AIBrain:
 
         while stack:
             position, moves = stack.pop()
+            current_shape_orientation = self.table.shape_orientation
 
             # Mark as visited
-            visited.add(position)
-
+            visited.add((position, current_shape_orientation))
             # Simulate dropping the piece in the current position and evaluate
-            self.table.shape_reposition(position)
+            self.table.shape_reposition(position, current_shape_orientation)
             if self.table.shape_position != position: # Shape couldn't be placed in the position
                 continue
 
-            for i in range(4):
-                self.table.rotate()
-                moves.append('rotate')
-
-                if not self.table.can_place(self.table.current_shape, position):
-                    continue
-
-
-                score = self._evaluate_board(self.table.board)
-                if score > best_score:
-                    best_score = score
-                    best_moves = moves.copy()
-
-                moves.pop()
-
             # Add possible actions to the stack
-            for action in ['left', 'right', 'drop']:
-                new_position, is_valid = self._simulate_action(position, action)
-                if is_valid and new_position not in visited:
+            for action in ['left', 'right', 'drop', 'rotate']:
+                new_position, new_rotation = self._simulate_action(position, action)
+                # Add to stack only if it's a new move
+                if new_position not in visited:
                     stack.append((new_position, moves + [action]))
+                    # Check score if shape had landed
+                    if action == 'drop' and self.table.is_shape_landing():
+                        score = self._evaluate_board(self.table.board)
+                        if score > best_score:
+                            best_score = score
+                            best_moves = moves.copy()
 
+                self.table.shape_reposition(position, current_shape_orientation)
+
+
+        print(best_score)
+        print(best_moves)
         return best_score, best_moves
 
 

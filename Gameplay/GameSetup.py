@@ -39,7 +39,7 @@ def main():
     ai_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if Definitions.PLAY_WITH_AI else None
 
     # Initialize AI agent
-    ai_agent = AIAgent() if Definitions.PLAY_WITH_AI else None
+    ai_agent = AIAgent(-0.184,-0.51,-0.356,0.76) if Definitions.PLAY_WITH_AI else None
 
     # Initialize scoring and timer
     start_time, human_score = initialize_timer_and_score()
