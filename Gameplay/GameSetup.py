@@ -39,8 +39,8 @@ def main():
     ai_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if Definitions.PLAY_WITH_AI else None
 
     # Initialize AI agent
-    ai_agent = AIAgent(-0.184,-0.51,-0.356,0.76) if Definitions.PLAY_WITH_AI else None
-
+    # ai_agent = AIAgent(-0.184483,-0.510066,-0.35663,0.760666) if Definitions.PLAY_WITH_AI else None
+    ai_agent = AIAgent(-0.384483, -0.110066, -0.35663, 0.760666) if Definitions.PLAY_WITH_AI else None
     # Initialize scoring and timer
     start_time, human_score = initialize_timer_and_score()
     ai_score = 0 if Definitions.PLAY_WITH_AI else None
@@ -92,7 +92,8 @@ def main():
             ai_agent.choose_action(ai_table)
             if current_time - ai_last_drop_time > Definitions.DROP_INTERVAL:
                 if not ai_table.is_shape_landing():
-                    ai_table.drop()
+                   # ai_table.drop()
+                    continue
                 else:
                     lines_cleaned = ai_table.check_for_cleared_rows()
                     if lines_cleaned > 0:

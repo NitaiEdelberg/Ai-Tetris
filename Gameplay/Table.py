@@ -24,6 +24,7 @@ class Table:
         self.current_shape_name = None
         self.shape_position = (0, 0)  # (row, col)
         self.shape_generator = list(Definitions.SHAPES.keys())
+        # self.shape_generator = list('I'*7)
         np.random.shuffle(self.shape_generator)
         self.shape_generator_pos = 0
         self._shape_landed = False
@@ -87,7 +88,7 @@ class Table:
                 self._shape_landed = True
                 self.place_shape()
 
-    def shape_reposition(self, new_position, new_shape_orientation):
+    def shape_reposition(self, new_position, new_shape_orientation, reset_shape_landed = False):
         """
         Move the current shape to the specified position and orientation.
         :param new_position: (row, col) to which the shape should be moved.
@@ -120,6 +121,8 @@ class Table:
                 self.current_shape = old_shape
                 self.shape_position = old_position
                 self.shape_orientation = old_orientation
+        if reset_shape_landed:
+            self._shape_landed = False
 
     def can_place(self, shape, position):
         """
