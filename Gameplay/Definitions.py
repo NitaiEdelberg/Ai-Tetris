@@ -5,11 +5,11 @@ import numpy as np
 GRID_SIZE = 32 # Size of the screen
 BOARD_WIDTH, BOARD_HEIGHT = 10, 20 # Size of the board
 SCREEN_WIDTH, SCREEN_HEIGHT = GRID_SIZE * BOARD_WIDTH, GRID_SIZE * BOARD_HEIGHT
-DROP_INTERVAL = 100  # Time in milliseconds between automatic drops
-FPS = 24 #frames per seconds
+DROP_INTERVAL = 500  # Time in milliseconds between automatic drops
+FPS = 30 #frames per seconds
 PLAY_WITH_AI = True
-GRAPHICS_ON = True
 PLAY_WITH_HUMAN = True
+GRAPHICS_ON = True
 AI_PLAY_WITH_GRAPHIC = True
 
 # Colors (RGB)
