@@ -1,5 +1,5 @@
 import pygame
-import Definitions
+from Gameplay import Definitions
 
 def draw_grid(screen, x_offset=0):
     """

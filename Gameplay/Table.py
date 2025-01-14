@@ -4,8 +4,7 @@ import numpy as np
 from numpy.ma.core import shape, count
 from numpy.random import random
 
-import Definitions
-from Gameplay.Definitions import SHAPES
+from Gameplay import Definitions
 
 
 class Table:

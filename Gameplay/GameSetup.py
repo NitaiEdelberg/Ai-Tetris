@@ -1,11 +1,13 @@
 import multiprocessing
-
 import pygame
 import sys
-import Definitions
+
+from scipy.fft import ifft2
+
 from AIPlayer.AIAgent import AIAgent
-from Table import Table
-import Display
+from Gameplay.Table import Table
+from Gameplay import Display
+from Gameplay import Definitions
 
 # Timer
 def initialize_timer():
@@ -27,27 +29,23 @@ def handle_human_input(keys, table):
     elif keys[pygame.K_UP]:
         table.rotate()
 
-def run_tetris_game(play_with_human : bool = False, play_with_ai : bool = True) -> int:
+def run_tetris_game(play_with_human : bool = False, ai_agent : AIAgent = None) -> int:
     human_end_time = None
     ai_end_time = None
 
     pygame.init()
-    screen_width = Definitions.SCREEN_WIDTH * 2 if play_with_ai and play_with_human else Definitions.SCREEN_WIDTH
+    screen_width = Definitions.SCREEN_WIDTH * 2 if AIAgent and play_with_human else Definitions.SCREEN_WIDTH
     screen = pygame.display.set_mode((screen_width, Definitions.SCREEN_HEIGHT))
     clock = pygame.time.Clock()
 
     # Initialize Table Instances
     human_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if play_with_human else None
-    ai_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if play_with_ai else None
-
-    # Initialize AI agent
-    # ai_agent = AIAgent(-0.184483,-0.510066,-0.35663,0.760666) if Definitions.play_with_ai else None
-    ai_agent = AIAgent(2, 1, 4, 5) if play_with_ai else None
+    ai_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if AIAgent else None
 
     # Initialize scoring and timer
     start_time = initialize_timer()
     human_score = 0 if play_with_human else None
-    ai_score = 0 if play_with_ai else None
+    ai_score = 0 if AIAgent else None
 
     # Spawn initial shapes
     if human_table:
@@ -59,8 +57,8 @@ def run_tetris_game(play_with_human : bool = False, play_with_ai : bool = True) 
     ai_last_drop_time = pygame.time.get_ticks() if ai_table else None
 
     running = True
-    human_active = True
-    ai_active = True
+    human_active = True if play_with_human else False
+    ai_active = True if AIAgent else False
 
     # Game Loop
     while running:
@@ -68,12 +66,13 @@ def run_tetris_game(play_with_human : bool = False, play_with_ai : bool = True) 
 
         #******************************** human ***********************************
         # Event handling
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+        if play_with_human:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
-            if human_table and human_active and event.type == pygame.KEYDOWN:
-                handle_human_input(pygame.key.get_pressed(), human_table)
+                if human_table and human_active and event.type == pygame.KEYDOWN:
+                    handle_human_input(pygame.key.get_pressed(), human_table)
 
         # Handle continuous input for human
         if human_table and human_active:
@@ -142,42 +141,32 @@ def run_tetris_game(play_with_human : bool = False, play_with_ai : bool = True) 
             if ai_table and Definitions.AI_PLAY_WITH_GRAPHIC:
                 Display.draw_grid(screen, Definitions.SCREEN_WIDTH)
                 Display.draw_board(screen, ai_table.board, ai_table.current_shape, ai_table.current_shape_name,
-                                   ai_table.shape_position, x_offset=Definitions.SCREEN_WIDTH) if play_with_human and play_with_ai else Display.draw_board(screen, ai_table.board, ai_table.current_shape, ai_table.current_shape_name,
+                                   ai_table.shape_position, x_offset=Definitions.SCREEN_WIDTH) if play_with_human and AIAgent else Display.draw_board(screen, ai_table.board, ai_table.current_shape, ai_table.current_shape_name,
                                    ai_table.shape_position, x_offset=0)
                 if ai_active:
-                    Display.draw_timer_and_score(screen, elapsed_time, ai_score, Definitions.SCREEN_WIDTH) if play_with_human and play_with_ai else Display.draw_timer_and_score(screen, elapsed_time, ai_score, 0)
+                    Display.draw_timer_and_score(screen, elapsed_time, ai_score, Definitions.SCREEN_WIDTH) if play_with_human and AIAgent else Display.draw_timer_and_score(screen, elapsed_time, ai_score, 0)
                 else:
-                    Display.draw_timer_and_score(screen, ai_end_time, ai_score, Definitions.SCREEN_WIDTH) if play_with_human and play_with_ai else Display.draw_timer_and_score(screen, ai_end_time, ai_score, 0)
+                    Display.draw_timer_and_score(screen, ai_end_time, ai_score, Definitions.SCREEN_WIDTH) if play_with_human and AIAgent else Display.draw_timer_and_score(screen, ai_end_time, ai_score, 0)
                 if not ai_active:
                     Display.draw_game_over(screen, ai_score, ai_end_time, Definitions.SCREEN_WIDTH) if play_with_human else Display.draw_game_over(screen, ai_score, ai_end_time, 0)
 
         pygame.display.flip()
 
-    waiting = True
+    waiting = play_with_human
     while waiting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 waiting = False
-
-    return ai_score if play_with_ai else human_score
     pygame.quit()
-    sys.exit()
+    return ai_score if AIAgent else human_score
 
 # Main Game Loop
 def main():
-    # Number of processes to run
-    num_processes = 1  # Adjust as needed
+    ai_agent_optimal = AIAgent(0.5,0.5,0.5,0.5)
+    print(run_tetris_game(play_with_human = False, ai_agent=ai_agent_optimal))
 
-    # Create and start processes
-    processes = []
-    for _ in range(num_processes):
-        process = multiprocessing.Process(target=run_tetris_game, args=(False, True))  # Pass function and arguments
-        processes.append(process)
-        process.start()
+    sys.exit()
 
-    # Wait for all processes to finish
-    for process in processes:
-        process.join()
 
 if __name__ == "__main__":
     main()

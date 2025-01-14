@@ -110,7 +110,7 @@ class AIBrain:
         self.log_data['best_moves'] = best_moves
 
         # Save to file
-        self._save_log()
+        # self._save_log()
 
         return best_score, best_moves
 
