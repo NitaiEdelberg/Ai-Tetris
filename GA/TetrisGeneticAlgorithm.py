@@ -1,8 +1,12 @@
+import threading
+
 from eckity.algorithms.simple_evolution import SimpleEvolution
 from eckity.subpopulation import Subpopulation
 from eckity.breeders.simple_breeder import SimpleBreeder
 from eckity.statistics.best_average_worst_statistics import BestAverageWorstStatistics
 from eckity.fitness.simple_fitness import SimpleFitness
+
+from Gameplay.GameSetup import run_tetris_game
 from Genetics import WeightMutation, WeightCrossover, WeightIndividual, WeightCreator
 from GenerationTerminationChecker import GenerationTerminationChecker
 from Evaluator import Evaluator
@@ -29,15 +33,44 @@ class TetrisGeneticAlgorithm:
             breeder=SimpleBreeder(),
             max_generation=100,  # Run for 100 generations
             statistics=BestAverageWorstStatistics(),
-            termination_checker=GenerationTerminationChecker(generations_limit=50, fitness_threshold=1000)
+            termination_checker=GenerationTerminationChecker(generations_limit=50, fitness_threshold=1000),
+            max_workers=1
         )
 
         ga.evolve()
         best = ga.execute()
         print("Best weights:", best.weights)
 
-# Example usage
+# Shared variable for the best weights
+best_weights = None
+ga_done_event = threading.Event()
+
+def run_ga():
+    global best_weights
+    ga = TetrisGeneticAlgorithm(population_size=2, generations=10)
+    ga.run()
+    # Set the best weights (replace `None` with the actual result from your GA)
+    # best_weights = [0.5, 0.5, 0.5, 0.5]  # Example values
+    ga_done_event.set()  # Signal that the GA is done
+
 if __name__ == "__main__":
-    ga = TetrisGeneticAlgorithm(population_size=1, generations=10)
-    best_weights = ga.run()
-    print("Optimized Weights for AI Agent:", best_weights)
+    # Start the GA in a separate thread
+    ga_thread = threading.Thread(target=run_ga)
+    ga_thread.start()
+
+    # Run the PyGame loop with a default AI agent
+    try:
+        ai_agent = None
+        # while not ga_done_event.is_set():
+        #     # Run PyGame with a default AI or placeholder agent
+        #     run_tetris_game(play_with_human=False, ai_agent=ai_agent)
+
+        # Once GA is done, update the AI agent with the best weights
+        print("GA completed! Best weights:", best_weights)
+        ai_agent = None  # Create a new agent using the best weights
+        # run_tetris_game(play_with_human=False, ai_agent=ai_agent)
+
+    finally:
+        # Ensure the GA thread finishes
+        ga_thread.join()
+        print("GA thread has completed.")
