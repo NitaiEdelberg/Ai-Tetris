@@ -21,7 +21,7 @@ class TetrisGeneticAlgorithm:
         ga = SimpleEvolution(
             Subpopulation(
                 creators= weight_creator,
-                population_size=50,
+                population_size=2,
                 evaluator=Evaluator(),
                 higher_is_better=True,
                 operators_sequence=[
@@ -31,9 +31,9 @@ class TetrisGeneticAlgorithm:
                 elitism_rate=0.05  # Retain top 5% individuals
             ),
             breeder=SimpleBreeder(),
-            max_generation=100,  # Run for 100 generations
+            max_generation=10,  # Run for 100 generations
             statistics=BestAverageWorstStatistics(),
-            termination_checker=GenerationTerminationChecker(generations_limit=50, fitness_threshold=1000),
+            termination_checker=GenerationTerminationChecker(generations_limit=20, fitness_threshold=1000),
             max_workers=1
         )
 
@@ -49,6 +49,7 @@ def run_ga():
     global best_weights
     ga = TetrisGeneticAlgorithm(population_size=2, generations=10)
     ga.run()
+    best_weights = ga.best_individual.weights
     # Set the best weights (replace `None` with the actual result from your GA)
     # best_weights = [0.5, 0.5, 0.5, 0.5]  # Example values
     ga_done_event.set()  # Signal that the GA is done
