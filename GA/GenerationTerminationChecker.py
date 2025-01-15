@@ -8,4 +8,4 @@ class GenerationTerminationChecker(TerminationChecker):
 
     def should_terminate(self, population, best_individual, gen_number):
         return (gen_number >= self.generations_limit or
-                best_individual.get_pure_fitness() >= self.fitness_threshold)
+                best_individual.fitness.get_pure_fitness() >= self.fitness_threshold)

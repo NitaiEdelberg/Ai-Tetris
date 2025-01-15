@@ -1,4 +1,6 @@
 import random
+
+from eckity.fitness import Fitness
 from eckity.genetic_operators.genetic_operator import GeneticOperator
 from eckity.individual import Individual
 from eckity.creators.creator import Creator
@@ -19,8 +21,13 @@ class WeightCreator(Creator):
 class WeightIndividual(Individual):
     def __init__(self, fitness):
         super().__init__(fitness)
-        self.weights = [random.uniform(-1, 0) for _ in range(3)] + [random.uniform(0, 1)]  # Example: bumpiness, height, holes, cleared rows
+        self.weights = [random.uniform(-10, 0) for _ in range(3)] + [random.uniform(0, 10)]  # Example: bumpiness, height, holes, cleared rows
 
+    def show(self):
+        return self.weights
+
+    def execute(self):
+        return self
 
 class WeightCrossover(GeneticOperator):
     def apply(self, individuals):
@@ -36,5 +43,6 @@ class WeightMutation(GeneticOperator):
     def apply(self, individuals):
         for ind in individuals:
             idx = random.randint(0, len(ind.weights) - 1)
-            ind.weights[idx] += random.uniform(-0.1, 0.1)  # Small perturbation
+            offset = ind.weights[idx]*random.uniform(0.01, 0.1)
+            ind.weights[idx] += random.uniform(-offset, offset)  # Small perturbation
         return individuals

@@ -16,7 +16,8 @@ class AIAgent:
         Decide the best action for the current board state based on heuristic weights.
         :param table: Table instance representing the game board.
         """
-        best_score = float('-inf')
+
+        best_score = -1
 
         if len(self.best_moves) == 0 and table.current_shape is not None:
             brain = AIBrain(copy.deepcopy(table), self.weights)
