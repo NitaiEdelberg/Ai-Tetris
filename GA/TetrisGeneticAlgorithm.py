@@ -1,10 +1,16 @@
 import threading
+import logging
+import multiprocessing
+from logging.handlers import QueueHandler, QueueListener
+from queue import Queue
 
+import eckity.genetic_operators
 from eckity.algorithms.simple_evolution import SimpleEvolution
 from eckity.subpopulation import Subpopulation
 from eckity.breeders.simple_breeder import SimpleBreeder
 from eckity.statistics.best_average_worst_statistics import BestAverageWorstStatistics
 from eckity.fitness.simple_fitness import SimpleFitness
+from eckity.genetic_operators.selections.fp_selection import FitnessProportionateSelection
 
 from Gameplay.GameSetup import run_tetris_game
 from Genetics import WeightMutation, WeightCrossover, WeightIndividual, WeightCreator
@@ -12,69 +18,143 @@ from GenerationTerminationChecker import GenerationTerminationChecker
 from Evaluator import Evaluator
 from PopulationEvaluator import PopulationEvaluator
 
+
+def setup_logging():
+    # Create a queue for logging
+    log_queue = multiprocessing.Queue()
+
+    # Create handlers
+    file_handler = logging.FileHandler('10_20_5_new.log')
+    console_handler = logging.StreamHandler()
+
+    # Create formatters and add it to handlers
+    log_format = logging.Formatter('%(asctime)s - %(processName)s - %(threadName)s - %(message)s')
+    file_handler.setFormatter(log_format)
+    console_handler.setFormatter(log_format)
+
+    # Create queue listener
+    listener = QueueListener(log_queue, file_handler, console_handler)
+
+    # Start the listener in a separate thread
+    listener.start()
+
+    # Create and configure queue handler
+    queue_handler = QueueHandler(log_queue)
+
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.handlers = []  # Remove any existing handlers
+    root_logger.addHandler(queue_handler)
+    root_logger.setLevel(logging.INFO)
+
+    return listener, log_queue
+
+
 class TetrisGeneticAlgorithm:
     def __init__(self, population_size=50, generations=5):
         self.population_size = population_size
         self.generations = generations
         self.best_individual = None
+        self.logger = logging.getLogger(__name__)
 
     def run(self):
         weight_creator = WeightCreator(self.population_size, fitness_type=SimpleFitness)
         ga = SimpleEvolution(
             Subpopulation(
-                creators= weight_creator,
+                creators=weight_creator,
                 population_size=self.population_size,
                 evaluator=Evaluator(),
                 higher_is_better=True,
                 operators_sequence=[
-                    WeightCrossover(probability=0.8, arity=2),
-                    WeightMutation(probability=0.2, arity=1)
+                    WeightCrossover(probability=0.75, arity=2),
+                    WeightMutation(probability=0.2, arity=10)
                 ],
-                elitism_rate=0.3  # Retain top 5% individuals
+                selection_methods=[(FitnessProportionateSelection(higher_is_better=True), 1)],
+                elitism_rate=0.1
             ),
             population_evaluator=PopulationEvaluator(),
             breeder=SimpleBreeder(),
-            max_generation=self.generations,  # Run for 100 generations
-            statistics=BestAverageWorstStatistics(),
-            termination_checker=GenerationTerminationChecker(generations_limit=self.generations, fitness_threshold=1000),
+            max_generation=self.generations,
+            statistics=BestAverageWorstStatistics(),  # Fixed typo here
+            termination_checker=GenerationTerminationChecker(generations_limit=self.generations,
+                                                             fitness_threshold=100000),
             max_workers=1
         )
-
         ga.evolve()
         self.best_individual = ga.execute()
-        print("Best weights:", self.best_individual.weights)
+        self.logger.info(f"Best weights: {self.best_individual.weights}")
+
+
+# Override print to use logging
+def print_override(*args, **kwargs):
+    message = ' '.join(map(str, args))
+    logging.getLogger().info(message)
+
+
+import builtins
+
+builtins.print = print_override
 
 # Shared variable for the best weights
 best_weights = None
 ga_done_event = threading.Event()
 
+
 def run_ga():
     global best_weights
-    ga = TetrisGeneticAlgorithm(population_size=40, generations=50)
-    ga.run()
-    best_weights = ga.best_individual.weights
-    # Set the best weights (replace `None` with the actual result from your GA)
-    # best_weights = [0.5, 0.5, 0.5, 0.5]  # Example values
-    ga_done_event.set()  # Signal that the GA is done
+    logger = logging.getLogger(__name__)
+    logger.info("Starting Genetic Algorithm...\n")
+    try:
+        ga = TetrisGeneticAlgorithm(population_size=10, generations=20)
+        ga.run()
+        best_weights = ga.best_individual.weights
+        ga_done_event.set()
+        logger.info("GA thread completed")
+    except Exception as e:
+        logger.error(f"Error in GA thread: {str(e)}", exc_info=True)
+        raise
+
+
+def init_process(queue):
+    """Initialize logging for new processes"""
+    logging.getLogger().handlers = []  # Remove any existing handlers
+    queue_handler = QueueHandler(queue)
+    logging.getLogger().addHandler(queue_handler)
+    logging.getLogger().setLevel(logging.INFO)
+
 
 if __name__ == "__main__":
-    # Start the GA in a separate thread
-    ga_thread = threading.Thread(target=run_ga)
-    ga_thread.start()
+    # Set up logging and get the queue
+    listener, log_queue = setup_logging()
+    logger = logging.getLogger(__name__)
 
-    # Run the PyGame loop with a default AI agent
     try:
-        ai_agent = None
-        # while not ga_done_event.is_set():
-        #     # Run PyGame with a default AI or placeholder agent
-        #     run_tetris_game(play_with_human=False, ai_agent=ai_agent)
+        logger.info("Starting main program")
 
-        # Once GA is done, update the AI agent with the best weights
+        # If your evaluator uses multiprocessing, set it up with logging initialization
+        ctx = multiprocessing.get_context('spawn')
+        with ctx.Pool(initializer=init_process, initargs=(log_queue,)) as pool:
+            ga_thread = threading.Thread(target=run_ga, name="GA-Thread")
+            ga_thread.start()
 
-        ai_agent = None  # Create a new agent using the best weights
-        # run_tetris_game(play_with_human=False, ai_agent=ai_agent)
+            try:
+                ai_agent = None
+                # Your game loop code here
+                ga_thread.join()
+                logger.info("GA completed!")
+
+            except Exception as e:
+                logger.error(f"Error in main thread: {str(e)}", exc_info=True)
+                raise
+
+            finally:
+                if ga_thread.is_alive():
+                    ga_thread.join()
+
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}", exc_info=True)
 
     finally:
-        # Ensure the GA thread finishes
-        ga_thread.join()
-        print("GA completed! Best weights:", best_weights)
+        logger.info("Program finished\n")
+        listener.stop()  # Stop the logging listener
+        log_queue.close()  # Close the logging queue

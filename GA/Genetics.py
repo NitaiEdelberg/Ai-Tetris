@@ -21,7 +21,7 @@ class WeightCreator(Creator):
 class WeightIndividual(Individual):
     def __init__(self, fitness):
         super().__init__(fitness)
-        self.weights = [random.uniform(-10, 0) for _ in range(3)] + [random.uniform(0, 10)]  # Example: bumpiness, height, holes, cleared rows
+        self.weights = [random.uniform(-1, 0) for _ in range(3)] + [random.uniform(0, 1)]  # Example: bumpiness, height, holes, cleared rows
 
     def show(self):
         return self.weights
@@ -32,9 +32,9 @@ class WeightIndividual(Individual):
 class WeightCrossover(GeneticOperator):
     def apply(self, individuals):
         i1, i2 = individuals
-        midpoint = len(i1.weights) // 2
-        child1_weights = i1.weights[:midpoint] + i2.weights[midpoint:]
-        child2_weights = i2.weights[:midpoint] + i1.weights[midpoint:]
+        crossover_point = random.randint(1, len(i1.weights) - 1)  # Random crossover point
+        child1_weights = i1.weights[:crossover_point] + i2.weights[crossover_point:]
+        child2_weights = i2.weights[:crossover_point] + i1.weights[crossover_point:]
 
         i1.weights, i2.weights = child1_weights, child2_weights
         return individuals
@@ -43,6 +43,7 @@ class WeightMutation(GeneticOperator):
     def apply(self, individuals):
         for ind in individuals:
             idx = random.randint(0, len(ind.weights) - 1)
-            offset = ind.weights[idx]*random.uniform(0.01, 0.1)
-            ind.weights[idx] += random.uniform(-offset, offset)  # Small perturbation
+            # Gaussian mutation, mean=0, standard deviation based on the weight
+            mutation = random.gauss(0, abs(ind.weights[idx]) * 0.1)  # Adjust standard deviation
+            ind.weights[idx] += mutation
         return individuals
