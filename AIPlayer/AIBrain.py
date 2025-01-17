@@ -4,6 +4,8 @@ import numpy as np
 import json
 from datetime import datetime
 
+from Gameplay.Definitions import POINTS_PER_LINE
+
 
 class AIBrain:
     def __init__(self, table, weights):
@@ -23,7 +25,7 @@ class AIBrain:
                 self.weights[0] * statistics['bumpiness'] +
                 self.weights[1] * statistics['max_height'] +
                 self.weights[2] * statistics['holes'] +
-                self.weights[3] * statistics['cleared']
+                self.weights[3] * (POINTS_PER_LINE[statistics['cleared']] / 40)
         )
 
         # Log the evaluation details
@@ -86,7 +88,7 @@ class AIBrain:
             visited.add(state_key)
             self.log_data['visited_spots'].add(str(state_key))  # Convert to string for JSON serialization
 
-            for action in ['rotate', 'left', 'right', 'drop']:
+            for action in ['drop', 'left', 'right', 'rotate']:
                 new_state = deepcopy(current_state)
                 has_landed, new_pos, new_orientation = self._simulate_action(new_state, action)
                 new_moves = moves + [action]
