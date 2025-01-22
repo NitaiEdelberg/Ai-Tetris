@@ -19,12 +19,14 @@ class AIAgent:
 
         best_score = -1
 
-        if len(self.best_moves) == 0 and table.current_shape is not None:
+        if len(self.best_moves) == 0 or table.current_shape is None:
+            # if table.current_shape is None and len(self.best_moves) != 0:
+                # print("Shape is NONE!")
             brain = AIBrain(copy.deepcopy(table), self.weights)
             best_score, self.best_moves = brain.find_best_placement()
 
-        if len(self.best_moves) == 0:
-            return
+        # if len(self.best_moves) == 0:
+        #     return
 
         best_action = self.best_moves.pop()
         # print(best_action)

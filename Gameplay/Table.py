@@ -30,6 +30,7 @@ class Table:
         self._rows_cleared = 0
         self.game_over = False
         self.shape_orientation = 0
+        self.holes_before = 0
 
     def spawn_next_shape(self):
         """
@@ -151,6 +152,7 @@ class Table:
         Place the current shape on the board and clear full rows.
         """
         row, col = self.shape_position
+        self.holes_before = self.get_holes()
         # shape_id = list(Definitions.SHAPES.keys())[self.shape_generator_pos - 1]
         for r in range(self.current_shape.shape[0]):
             for c in range(self.current_shape.shape[1]):
@@ -266,7 +268,7 @@ class Table:
         return {
             'bumpiness': self.get_bumpiness(),
             'max_height': self.get_aggregate_height(),
-            'holes': self.get_holes(),
+            'holes': self.get_holes() - self.holes_before,
             'cleared': self._rows_cleared
         }
 

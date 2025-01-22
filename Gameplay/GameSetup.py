@@ -211,10 +211,14 @@ def run_tetris_game_with_graphics(play_with_human : bool = False, ai_agent : AIA
 
 # Main Game Loop
 def main():
-    ai_agent_optimal = AIAgent(-0.41503952099193375, -0.9789465866960196, -0.8851436530882919, 0.43928167880791913)
+    # ai_agent_optimal = AIAgent(-0.42311679935207946, -0.6050074206943761, -0.7073960737188766, 0.026416007419959753)
+    # ai_agent_optimal = AIAgent(-0.2031239239304267, -0.9012882787168671, -0.36325534782999528, 0.873019662877332)
+    ai_agent_optimal = AIAgent(-0.16044284177187973, -0.0029765700302580283, -0.8278209387332695, 0.06613546738395593)
+    # ai_agent_optimal = AIAgent(-0.41503952099193375, -0.9789465866960196, -0.8851436530882919, 0.43928167880791913)
     # ai_agent_optimal_2 = AIAgent(-0.184483, -0.510066, -0.35663, 0.760666)
     print(run_tetris_game_with_graphics(ai_agent=ai_agent_optimal))
     # print(run_tetris_game_with_graphics(ai_agent=ai_agent_optimal_2))
+    # run_tetris_game_with_graphics(play_with_human=True, ai_agent=ai_agent_optimal)
     sys.exit()
 
 

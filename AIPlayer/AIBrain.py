@@ -25,7 +25,7 @@ class AIBrain:
                 self.weights[0] * statistics['bumpiness'] +
                 self.weights[1] * statistics['max_height'] +
                 self.weights[2] * statistics['holes'] +
-                self.weights[3] * (POINTS_PER_LINE[statistics['cleared']] / 40)
+                self.weights[3] * (POINTS_PER_LINE[statistics['cleared']] / POINTS_PER_LINE[1])
         )
 
         # Log the evaluation details

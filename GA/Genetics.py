@@ -11,7 +11,7 @@ class WeightCreator(Creator):
         self.population_size = population_size
         self.fitness_type = fitness_type
 
-    def create_individuals(self, n_individuals, higher_is_better=False):
+    def create_individuals(self, n_individuals, higher_is_better=True):
         # Generate a list of WeightIndividuals
         return [
             WeightIndividual(fitness=self.fitness_type(higher_is_better=higher_is_better))
@@ -21,7 +21,8 @@ class WeightCreator(Creator):
 class WeightIndividual(Individual):
     def __init__(self, fitness):
         super().__init__(fitness)
-        self.weights = [random.uniform(-1, 0) for _ in range(3)] + [random.uniform(0, 1)]  # Example: bumpiness, height, holes, cleared rows
+        # self.weights = [random.uniform(-1, 0) for _ in range(3)] + [random.uniform(0, 1)]  # Example: bumpiness, height, holes, cleared rows
+        self.weights = [-0.16044284177187973, -0.0029765700302580283, -0.8278209387332695, 0.06613546738395593]  # Example: bumpiness, height, holes, cleared rows
 
     def show(self):
         return self.weights

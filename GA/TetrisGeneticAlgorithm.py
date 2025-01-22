@@ -10,7 +10,7 @@ from eckity.subpopulation import Subpopulation
 from eckity.breeders.simple_breeder import SimpleBreeder
 from eckity.statistics.best_average_worst_statistics import BestAverageWorstStatistics
 from eckity.fitness.simple_fitness import SimpleFitness
-from eckity.genetic_operators.selections.fp_selection import FitnessProportionateSelection
+from eckity.genetic_operators.selections.tournament_selection import TournamentSelection
 
 from Gameplay.GameSetup import run_tetris_game
 from Genetics import WeightMutation, WeightCrossover, WeightIndividual, WeightCreator
@@ -24,7 +24,7 @@ def setup_logging():
     log_queue = multiprocessing.Queue()
 
     # Create handlers
-    file_handler = logging.FileHandler('10_20_5_new.log')
+    file_handler = logging.FileHandler('20_10_5_holes_diff_tor_start.log')
     console_handler = logging.StreamHandler()
 
     # Create formatters and add it to handlers
@@ -66,18 +66,18 @@ class TetrisGeneticAlgorithm:
                 evaluator=Evaluator(),
                 higher_is_better=True,
                 operators_sequence=[
-                    WeightCrossover(probability=0.75, arity=2),
-                    WeightMutation(probability=0.2, arity=10)
+                    WeightCrossover(probability=0.65, arity=2),
+                    WeightMutation(probability=0.45, arity=10)
                 ],
-                selection_methods=[(FitnessProportionateSelection(higher_is_better=True), 1)],
-                elitism_rate=0.1
+                selection_methods=[(TournamentSelection(tournament_size= 3,higher_is_better=True), 1)],
+                elitism_rate=0.3
             ),
             population_evaluator=PopulationEvaluator(),
             breeder=SimpleBreeder(),
             max_generation=self.generations,
-            statistics=BestAverageWorstStatistics(),  # Fixed typo here
+            statistics=BestAverageWorstStatistics(),
             termination_checker=GenerationTerminationChecker(generations_limit=self.generations,
-                                                             fitness_threshold=100000),
+                                                             fitness_threshold=20000),
             max_workers=1
         )
         ga.evolve()
@@ -105,7 +105,7 @@ def run_ga():
     logger = logging.getLogger(__name__)
     logger.info("Starting Genetic Algorithm...\n")
     try:
-        ga = TetrisGeneticAlgorithm(population_size=10, generations=20)
+        ga = TetrisGeneticAlgorithm(population_size=20, generations=10)
         ga.run()
         best_weights = ga.best_individual.weights
         ga_done_event.set()
