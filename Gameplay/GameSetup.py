@@ -141,16 +141,21 @@ def run_tetris_game_with_graphics(play_with_human : bool = False, ai_agent : AIA
         # Update AI player
         if ai_table and ai_active and Definitions.PLAY_WITH_AI:
             ai_agent.choose_action(ai_table)
-            if current_time - ai_last_drop_time > Definitions.DROP_INTERVAL:
-                if not ai_table.is_shape_landing():
-                    #ai_table.drop()
-                    continue
-                else:
-                    lines_cleaned = ai_table.check_for_cleared_rows()
-                    if lines_cleaned > 0:
-                        ai_score += Definitions.POINTS_PER_LINE[lines_cleaned]
-                    ai_table.spawn_next_shape()
-                ai_last_drop_time = current_time
+            # if current_time - ai_last_drop_time > Definitions.DROP_INTERVAL:
+            #     if not ai_table.is_shape_landing():
+            #         #ai_table.drop()
+            #         continue
+            #     else:
+            #         lines_cleaned = ai_table.check_for_cleared_rows()
+            #         if lines_cleaned > 0:
+            #             ai_score += Definitions.POINTS_PER_LINE[lines_cleaned]
+            #         ai_table.spawn_next_shape()
+            #     ai_last_drop_time = current_time
+            if ai_table.is_shape_landing():
+                lines_cleaned = ai_table.check_for_cleared_rows()
+                if lines_cleaned > 0:
+                    ai_score += Definitions.POINTS_PER_LINE[lines_cleaned]
+                ai_table.spawn_next_shape()
 
         # Update timers and scores
         elapsed_time = update_timer(start_time)

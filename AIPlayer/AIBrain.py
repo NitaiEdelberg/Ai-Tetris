@@ -15,7 +15,8 @@ class AIBrain:
             'explored_positions': [],
             'scores': [],
             'moves': [],
-            'visited_spots': set()
+            'visited_spots': set(),
+            'table': []
         }
 
     def _evaluate_board(self, table):
@@ -29,10 +30,10 @@ class AIBrain:
         )
 
         # Log the evaluation details
-        self.log_data['scores'].append({
-            'score': score,
-            'statistics': statistics
-        })
+        # self.log_data['scores'].append({
+        #     'score': score,
+        #     'statistics': statistics
+        # })
         return score
 
     def _simulate_action(self, table, action):
@@ -47,12 +48,12 @@ class AIBrain:
             table.drop()
 
         # Log the position after the action
-        self.log_data['explored_positions'].append({
-            'action': action,
-            'position': (table.shape_position[0], table.shape_position[1]),
-            'orientation': table.shape_orientation,
-            'landed': table.is_shape_landing()
-        })
+        # self.log_data['explored_positions'].append({
+        #     'action': action,
+        #     'position': (table.shape_position[0], table.shape_position[1]),
+        #     'orientation': table.shape_orientation,
+        #     'landed': table.is_shape_landing()
+        # })
 
         return (table.is_shape_landing(), table.shape_position, table.shape_orientation)
 
@@ -95,12 +96,12 @@ class AIBrain:
 
                 if has_landed:
                     score = self._evaluate_board(new_state)
-                    self.log_data['moves'].append({
-                        'sequence': new_moves,
-                        'final_position': (new_pos[0], new_pos[1]),
-                        'orientation': new_orientation,
-                        'score': score
-                    })
+                    # self.log_data['moves'].append({
+                    #     'sequence': new_moves,
+                    #     'final_position': (new_pos[0], new_pos[1]),
+                    #     'orientation': new_orientation,
+                    #     'score': score
+                    # })
                     if score > best_score:
                         best_score = score
                         best_moves = new_moves
@@ -124,6 +125,7 @@ class AIBrain:
         # Convert set to list for JSON serialization
         log_data = dict(self.log_data)
         log_data['visited_spots'] = list(log_data['visited_spots'])
+        log_data['table'] = np.array(self.table.display_board()).tolist()
 
         with open(filename, 'w') as f:
             json.dump(log_data, f, indent=2)

@@ -4,3 +4,4 @@ Gameplay/__pycache__/
 AIPlayer/__pycache__/
 .idea
 GA/__pycache__/
+*.log

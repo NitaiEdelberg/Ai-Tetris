@@ -85,7 +85,6 @@ class Table:
             if self.can_place(self.current_shape, new_position):
                 self.shape_position = new_position
             else:
-                self._shape_landed = True
                 self.place_shape()
 
     def shape_reposition(self, new_position, new_shape_orientation, reset_shape_landed = False):
@@ -133,7 +132,7 @@ class Table:
         :return: True if the shape can be placed, False otherwise.
         """
         if shape is None:
-            return False
+            return True
 
         row, col = position
         for r in range(shape.shape[0]):
@@ -162,6 +161,7 @@ class Table:
                     else:
                         self.board[row + r, col + c] = self.current_shape[1, 1]
         self.current_shape = None
+        self._shape_landed = True
         self._clear_rows()
 
     def _clear_rows(self):
@@ -188,7 +188,8 @@ class Table:
                             temp_board[row + r, col + c] = 1
                         else:
                             temp_board[row + r, col + c] = self.current_shape[1, 1]
-        print(temp_board, end='\n\n')
+        # print(temp_board, end='\n\n')
+        return temp_board
 
     def is_shape_landing(self):
         """
