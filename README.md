@@ -116,6 +116,8 @@ To improve upon the basic solver, that can miss placements that aren't at the to
 
 - **Slower Decision-Making:** While BFS finds better placements, it takes longer to compute, making it less suitable for real-time constraints in some implementations.
 
+![slow_bfs.gif](slow_bfs.gif)
+
 By using BFS, our AI achieves a more nuanced understanding of the game, leading to improved decision-making in complex scenarios.
 
 
@@ -128,7 +130,9 @@ We implemented several optimizations that enhanced performance and reduced compu
 
 One of the major bottlenecks in our initial BFS implementation was the exhaustive search of all possible placements, leading to high computation times. To address this, we optimized BFS by **limiting the search depth to six rows above the maximum height** of the board. This reduced the number of evaluated states and cut BFS execution time by approximately **70%**, significantly improving real-time performance without sacrificing decision quality.
 
-[ADD GRAPG SHOWING THE TIME DIFFERENCE]
+![fast_bfs.gif](fast_bfs.gif) ![slow_bfs.gif](slow_bfs.gif)
+
+![depth_limitation_graph.png](depth_limitation_graph.png)
 
 ### Hyperparameter Optimization in GA
 
@@ -162,6 +166,99 @@ By implementing these optimizations, we improved both the efficiency and strateg
 ### Experimental Findings
 - **Graphs comparing BFS with GA performance.**
 - **Insights on when each approach performs best.**
+
+
+## **Code Overview**
+
+### **Genetic Algorithm (GA) Modules**
+
+#### • `TetrisGeneticAlgorithm.py`
+
+- Uses the Eckity framework to implement a genetic algorithm that optimizes Tetris AI performance through evolution.
+- The `TetrisGeneticAlgorithm` class initializes a genetic algorithm with a defined population size and selection strategy.
+- It employs Tournament Selection for choosing parents and applies WeightCrossover and WeightMutation to evolve individuals.
+- `run_ga` executes the genetic algorithm in a separate thread, running multiple generations until a termination condition is met.
+- The best-performing AI weights are selected based on fitness scores obtained from Tetris game simulations.
+
+#### • `Genetics.py`
+
+- Defines genetic operations for AI weight optimization.
+- `WeightCreator` (extends `Creator` from Eckity): Generates initial populations of AI individuals.
+- `WeightIndividual` (extends `Individual` from Eckity): Represents a Tetris-playing AI with weight-based heuristics.
+- `WeightCrossover` (extends `GeneticOperator` from Eckity): Implements crossover by swapping weight segments.
+- `WeightMutation` (extends `GeneticOperator` from Eckity): Mutates weights using a Gaussian distribution.
+
+#### • `GenerationTerminationChecker.py`
+
+- Implements stopping criteria for the genetic algorithm.
+- `GenerationTerminationChecker` (extends `TerminationChecker` from Eckity): Stops evolution when the generation limit or a fitness threshold is reached.
+
+#### • `Evaluator.py`
+
+- Evaluates AI performance using game simulations.
+- `Evaluator` (extends `SimpleIndividualEvaluator` from Eckity): Runs the AI for multiple rounds and computes the average score.
+- `evaluate individual`: Uses `run_tetris_game` with given AI individual to play Tetris with different weights and calculates performance.
+
+#### • `PopulationEvaluator.py`
+
+- Evaluates the entire population of AI agents in parallel.
+- `PopulationEvaluator` (extends `SimplePopulationEvaluator` from Eckity): Uses multiprocessing for efficiency.
+- Assigns fitness scores to individuals based on their game performance.
+
+### **AI Player Modules**
+
+#### • `AIAgent.py`
+
+- Defines the AI agent that plays Tetris.
+- Uses heuristic weights (`bumpiness`, `holes`, `max height`, etc.).
+- `choose_action`: Uses the AIBrain to decide the best move based on board evaluation.
+
+#### • `AIBrain.py`
+
+- Calculates the best moves when needed, using heuristics.
+- `find_best_placement`: Uses BFS to explore and evaluate moves for optimal shape placement.
+
+
+
+### **Gameplay Modules**
+
+#### • `GameSetup.py`
+
+- Handles the game loop and AI interaction.
+- Supports human vs AI gameplay and AI-only mode.
+- `run_tetris_game`: Runs the game in AI-only mode and returns the score.
+- Uses Pygame for rendering graphical elements.
+
+#### • `Display.py`
+
+- Handles Tetris board rendering using Pygame.
+- Draws shapes, grids, scores, and game over messages.
+- Functions include:
+  - `draw_board`: Displays the game board and current state.
+  - `draw_shape`: Draws Tetris pieces on the screen.
+  - `draw_timer_and_score`: Displays score and elapsed time.
+
+#### • `Table.py`
+
+- Defines the **Tetris board** and shape mechanics.
+- Implements shape movement, collision detection, and row clearing.
+- `spawn_next_shape`: Generates the next Tetris shape and places it at the starting position.
+- Tracks game statistics like bumpiness, max height, and holes.
+
+#### • `Definitions.py`
+
+- Stores game settings and constants.
+- Defines grid size, colors, shapes, and scoring system.
+
+---
+
+### **Project Summary**
+
+This project implements **Tetris AI using a genetic algorithm**. The AI improves by **evolving weights** over multiple generations. The AI plays Tetris by **evaluating board states** using heuristics. The game supports **human vs AI** and **AI-only modes** with **graphical rendering**.
+
+
+
+
 
 ## Future Improvements & Conclusions
 ### Alternative AI Approaches
