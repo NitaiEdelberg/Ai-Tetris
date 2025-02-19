@@ -1,17 +1,26 @@
-# Tetris AI Solver
 
-![img_1.png](img_1.png)
-`By Nitai Edelberg & Ido Toker`
 
-## Introduction
+![Tetris_AI_logo.png](Tetris_AI_logo.png)
+
+#### By Nitai Edelberg & Ido Toker
+
+# Introduction
 ### What is Tetris?
 Tetris is a classic puzzle game created by Alexey Pajitnov in 1984. The objective of the game is to manipulate falling geometric shapes called Tetriminos to create and clear full horizontal lines on the board. When a line is cleared, it disappears, and the remaining pieces shift downward. The game ends when the stack of pieces reaches the top of the board.
+
 ![RunningGameGif.gif](RunningGameGif.gif)
 ### Basic Rules of Tetris
 - **Game Board:** A grid-based playing field, typically 10 columns wide and 20 rows tall.
+
+
 - **Tetriminos:** Seven different shapes (I, J, L, O, S, T, Z) that can be rotated and moved left or right.
-    ![img.png](img.png)
+
+    ![Tetriminos.png](Tetriminos.png)
+
+
 - **Goal:** Arrange pieces to form complete rows, which are then cleared for points.
+
+
 - **Game Over:** The game ends when the stack of pieces reaches the top of the board and no more moves can be made.
 
 ## Problem Definition
@@ -47,11 +56,11 @@ To understand how to build the AI, we first reviewed various articles on Tetris 
 Based on our research and manual gameplay, we identified four key board features that are crucial for an effective Tetris-playing AI. These features help in evaluating the board state and making informed placement decisions:
 
 - **Max Height:** This refers to the tallest occupied column on the board. A high max height increases the risk of game over, so the AI should aim to minimize it.
-![img_8.png](img_8.png)
+![Max_Height.png](Max_Height.png)
 - **Bumpiness:** The sum of height differences between adjacent columns. A board with high bumpiness makes it harder to place pieces smoothly, increasing the chances of creating unfillable gaps.
-![img_6.png](img_6.png)
+![Bumpiness.png](Bumpiness.png)
 - **Holes:** Empty spaces that are covered by at least one block above them. These are particularly problematic since they cannot be cleared until the covering blocks are removed.
-![img_5.png](img_5.png)
+![Holes.png](Holes.png)
 - **Number of Cleared Rows:** The number of full lines removed after a piece placement. Clearing rows is the primary way to keep the board manageable and earn points.
 
 By incorporating these features as weights into our GA, we enabled it to make better strategic decisions when selecting placements for new pieces.
@@ -111,7 +120,39 @@ By using BFS, our AI achieves a more nuanced understanding of the game, leading 
 
 
 
-## Optimisations
+## Optimizations
+
+We implemented several optimizations that enhanced performance and reduced computational costs.
+
+### Limiting Search Depth of BFS
+
+One of the major bottlenecks in our initial BFS implementation was the exhaustive search of all possible placements, leading to high computation times. To address this, we optimized BFS by **limiting the search depth to six rows above the maximum height** of the board. This reduced the number of evaluated states and cut BFS execution time by approximately **70%**, significantly improving real-time performance without sacrificing decision quality.
+
+[ADD GRAPG SHOWING THE TIME DIFFERENCE]
+
+### Hyperparameter Optimization in GA
+
+To enhance learning efficiency, we fine-tuned the hyperparameters of our **Genetic Algorithm (GA)**. Key adjustments included:
+
+- **Mutation Rate**: Adjusted to maintain diversity while ensuring convergence.
+- **Crossover Probability**: Tuned to balance exploration and exploitation.
+- **Tournament Selection Parameters**: Optimized selection pressure to ensure strong individuals continue while maintaining population diversity.
+- **Elitism Rate**: The individuals that are passed to the next generation, and from them we do the crossovers and mutations.
+
+[ADD GRAPH SHOWING THE EXPIREMENTS. WRITE THE VALUES WE ENDED UP WITH]
+
+These refinements improved the AI’s learning process, leading to more consistent and effective gameplay strategies.
+
+### Adding Shape Placement
+
+Previously, our AI evaluated board states using four primary weights: bumpiness, max height, holes, and cleared rows. To improve placement decision-making, we introduced a fifth weight called shape placement. This weight measures how low a newly placed shape lands on the board, encouraging more compact stacking and reducing the likelihood of creating inaccessible gaps.
+
+### Experimenting with Hole Difference Calculation
+
+We experimented with an additional heuristic: **hole difference calculation**, which aimed to track the change in the number of holes after placing a piece. However, in practice, this did not yield meaningful improvements in AI performance. The added computational cost outweighed any benefits, so we ultimately decided not to include this feature in our final implementation.
+
+By implementing these optimizations, we improved both the efficiency and strategic depth of our AI, allowing it to make better decisions in real time while reducing unnecessary computation.
+
 
 ## Experiments & Results
 ### How We Tested the AI

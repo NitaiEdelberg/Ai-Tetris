@@ -24,7 +24,7 @@ def setup_logging():
     log_queue = multiprocessing.Queue()
 
     # Create handlers
-    file_handler = logging.FileHandler('test_5p_big_bfs.log')
+    file_handler = logging.FileHandler('test_5p_big_2_bfs.log')
     console_handler = logging.StreamHandler()
 
     # Create formatters and add it to handlers
@@ -77,7 +77,7 @@ class TetrisGeneticAlgorithm:
             max_generation=self.generations,
             statistics=BestAverageWorstStatistics(),
             termination_checker=GenerationTerminationChecker(generations_limit=self.generations,
-                                                             fitness_threshold=10000),
+                                                             fitness_threshold=100000),
             max_workers=1
         )
         ga.evolve()
