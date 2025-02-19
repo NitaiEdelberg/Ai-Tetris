@@ -5,10 +5,11 @@ import json
 from datetime import datetime
 
 from Gameplay.Definitions import POINTS_PER_LINE
+from Gameplay.Table import Table
 
 
 class AIBrain:
-    def __init__(self, table, weights):
+    def __init__(self, table: Table, weights):
         self.table = table
         self.weights = weights
         self.log_data = {
@@ -26,36 +27,37 @@ class AIBrain:
                 self.weights[0] * statistics['bumpiness'] +
                 self.weights[1] * statistics['max_height'] +
                 self.weights[2] * statistics['holes'] +
-                self.weights[3] * (POINTS_PER_LINE[statistics['cleared']] / POINTS_PER_LINE[1])
+                self.weights[3] * statistics['shape_placement'] +
+                self.weights[4] * (POINTS_PER_LINE[statistics['cleared']] / POINTS_PER_LINE[1])
         )
-
         # Log the evaluation details
-        # self.log_data['scores'].append({
-        #     'score': score,
-        #     'statistics': statistics
-        # })
+        self.log_data['scores'].append({
+            'score': score,
+            'statistics': statistics
+        })
         return score
 
-    def _simulate_action(self, table, action):
+    def _simulate_action(self, table: Table, action):
         """Simulate an action and return whether the piece has landed."""
+        is_valid = False
         if action == 'rotate':
-            table.rotate()
+            is_valid = table.rotate()
         elif action == 'left':
-            table.shift_left()
+            is_valid = table.shift_left()
         elif action == 'right':
-            table.shift_right()
+            is_valid = table.shift_right()
         elif action == 'drop':
-            table.drop()
+            is_valid = table.drop()
 
         # Log the position after the action
-        # self.log_data['explored_positions'].append({
-        #     'action': action,
-        #     'position': (table.shape_position[0], table.shape_position[1]),
-        #     'orientation': table.shape_orientation,
-        #     'landed': table.is_shape_landing()
-        # })
+        self.log_data['explored_positions'].append({
+            'action': action,
+            'position': (table.shape_position[0], table.shape_position[1]),
+            'orientation': table.shape_orientation,
+            'landed': table.is_shape_landing()
+        })
 
-        return (table.is_shape_landing(), table.shape_position, table.shape_orientation)
+        return is_valid, table.is_shape_landing(), table.shape_position, table.shape_orientation
 
     def find_best_placement(self):
         """Find the best landing position for the current piece using BFS."""
@@ -77,7 +79,13 @@ class AIBrain:
         initial_state = deepcopy(self.table)
         initial_pos = initial_state.shape_position
         initial_orientation = initial_state.shape_orientation
-        queue.append((initial_state, [], initial_pos, initial_orientation))
+        initial_moves = []
+        for i in range(initial_state.rows - initial_state.get_max_height() - len(initial_state.current_shape) - 2):
+            new_state: Table = deepcopy(initial_state)
+            is_valid, has_landed, initial_pos, initial_state = self._simulate_action(new_state, 'drop')
+            initial_state: Table = deepcopy(new_state)
+
+        queue.append((initial_state, initial_moves, initial_pos, initial_orientation))
 
         while queue:
             current_state, moves, position, orientation = queue.popleft()
@@ -90,22 +98,56 @@ class AIBrain:
             self.log_data['visited_spots'].add(str(state_key))  # Convert to string for JSON serialization
 
             for action in ['drop', 'left', 'right', 'rotate']:
-                new_state = deepcopy(current_state)
-                has_landed, new_pos, new_orientation = self._simulate_action(new_state, action)
+
+                if current_state.current_shape_name == 'O' and action == 'rotate': #Skip O rotations
+                    pass
+
+                new_state: Table = deepcopy(current_state)
+                is_valid, has_landed, new_pos, new_orientation = self._simulate_action(new_state, action)
+
+                if not is_valid:
+                    pass
+
                 new_moves = moves + [action]
+
+                # from Gameplay import Display, Definitions
+                # import pygame
+                # pygame.display.get_surface().fill((0, 0, 0))
+                # Display.draw_grid(pygame.display.get_surface(), Definitions.SCREEN_WIDTH)
+                #
+                # for *position, orinat in visited:
+                #     Display.draw_shape(
+                #         pygame.display.get_surface(),
+                #         Definitions.SHAPES[new_state.current_shape_name],
+                #         position,
+                #         orinat,
+                #         fake=True
+                #     )
+                #
+                # Display.draw_board(
+                #     pygame.display.get_surface(), new_state.board, new_state.current_shape, new_state.current_shape_name,
+                #     new_state.shape_position,
+                #     x_offset=0)
+                #
+                # pygame.display.flip()
+                # pygame.event.pump()
 
                 if has_landed:
                     score = self._evaluate_board(new_state)
-                    # self.log_data['moves'].append({
-                    #     'sequence': new_moves,
-                    #     'final_position': (new_pos[0], new_pos[1]),
-                    #     'orientation': new_orientation,
-                    #     'score': score
-                    # })
+                    self.log_data['moves'].append({
+                        'sequence': new_moves,
+                        'final_position': (new_pos[0], new_pos[1]),
+                        'orientation': new_orientation,
+                        'score': score
+                    })
                     if score > best_score:
                         best_score = score
                         best_moves = new_moves
-                elif new_state.current_shape is not None:
+                else:
+                    if new_state.current_shape is None:
+                        print(new_state)
+                        breakpoint()
+
                     queue.append((new_state, new_moves, new_pos, new_orientation))
 
         # Save the best result

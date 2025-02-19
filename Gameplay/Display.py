@@ -1,5 +1,43 @@
 # import pygame
 from Gameplay import Definitions
+import numpy as np
+
+def draw_shape(screen, shape, position, orientation, fake=False):
+    offset_degrees = (orientation - 0) % 360
+    rotations_needed = offset_degrees // 90
+
+    rotated_shape = shape.copy()
+    for _ in range(rotations_needed):
+        rotated_shape = np.rot90(rotated_shape)
+
+    shape_row, shape_col = position
+    for r in range(rotated_shape.shape[0]):
+        for c in range(rotated_shape.shape[1]):
+            if rotated_shape[r, c]:
+                pygame.draw.rect(
+                    screen,
+                    Definitions.SHAPES_COLORS.get(shape_name) if not fake else Definitions.GRAY,
+                    pygame.Rect(
+                        (shape_col + c) * Definitions.GRID_SIZE,
+                        (shape_row + r) * Definitions.GRID_SIZE,
+                        Definitions.GRID_SIZE,
+                        Definitions.GRID_SIZE
+                    )
+                )
+                pygame.draw.rect(
+                    screen,
+                    Definitions.WHITE,
+                    pygame.Rect(
+                        (shape_col + c) * Definitions.GRID_SIZE,
+                        (shape_row + r) * Definitions.GRID_SIZE,
+                        Definitions.GRID_SIZE,
+                        Definitions.GRID_SIZE
+                    ),
+                    1
+                )
+
+
+
 
 def draw_grid(screen, x_offset=0):
     """
@@ -12,7 +50,7 @@ def draw_grid(screen, x_offset=0):
     for y in range(0, Definitions.SCREEN_HEIGHT, Definitions.GRID_SIZE):
         pygame.draw.line(screen, Definitions.WHITE, (x_offset, y), (Definitions.SCREEN_WIDTH + x_offset, y))
 
-def draw_board(screen, board, shape=None, shape_name=None, position=(0, 0), x_offset=0):
+def draw_board(screen, board, shape=None, shape_name=None, position=(0, 0), x_offset=0, fake=False):
     """
     Draw the board and the current shape on the screen.
 
@@ -55,7 +93,7 @@ def draw_board(screen, board, shape=None, shape_name=None, position=(0, 0), x_of
                 if shape[r, c]:
                     pygame.draw.rect(
                         screen,
-                        Definitions.SHAPES_COLORS.get(shape_name),
+                        Definitions.SHAPES_COLORS.get(shape_name) if not fake else Definitions.GRAY,
                         pygame.Rect(
                             (shape_col + c) * Definitions.GRID_SIZE + x_offset,
                             (shape_row + r) * Definitions.GRID_SIZE,

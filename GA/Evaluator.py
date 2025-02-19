@@ -18,6 +18,6 @@ class Evaluator(SimpleIndividualEvaluator):
         # Simulate the game and return the score
         avg_score = 0
         for i in range(rounds):
-            avg_score += run_tetris_game(ai_agent=ai_agent)
+            avg_score += run_tetris_game(ai_agent=ai_agent, max_moves=1000)
         return avg_score/rounds # Return a fitness metric (e.g. average score)
 

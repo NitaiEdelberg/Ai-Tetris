@@ -1,9 +1,14 @@
 import multiprocessing
+import random
+from multiprocessing import Process
+from threading import Thread
+
 # import pygame
 import sys
 import time
 
 from scipy.fft import ifft2
+from six import moves
 
 from AIPlayer.AIAgent import AIAgent
 from Gameplay.Table import Table
@@ -30,7 +35,7 @@ def handle_human_input(keys, table):
     elif keys[pygame.K_UP]:
         table.rotate()
 
-def run_tetris_game(ai_agent: AIAgent) -> int:
+def run_tetris_game(ai_agent: AIAgent, max_moves = float('inf')) -> int:
     """
     Run a Tetris game with AI only.
 
@@ -51,6 +56,7 @@ def run_tetris_game(ai_agent: AIAgent) -> int:
 
     # Spawn initial shape
     ai_table.spawn_next_shape()
+    moves_left = max_moves - 1
 
     running = True
 
@@ -66,9 +72,10 @@ def run_tetris_game(ai_agent: AIAgent) -> int:
             if lines_cleaned > 0:
                 ai_score += Definitions.POINTS_PER_LINE[lines_cleaned]
             ai_table.spawn_next_shape()
+            moves_left -= 1
 
         # Check game over for AI
-        if ai_table.game_over:
+        if ai_table.game_over or moves_left == 0:
             running = False
             ai_end_time = int(current_time - start_time)
             print(f"AI Score: {ai_score}, Time: {ai_end_time}")
@@ -156,6 +163,7 @@ def run_tetris_game_with_graphics(play_with_human : bool = False, ai_agent : AIA
                 if lines_cleaned > 0:
                     ai_score += Definitions.POINTS_PER_LINE[lines_cleaned]
                 ai_table.spawn_next_shape()
+            pygame.event.pump()
 
         # Update timers and scores
         elapsed_time = update_timer(start_time)
@@ -218,9 +226,13 @@ def run_tetris_game_with_graphics(play_with_human : bool = False, ai_agent : AIA
 def main():
     # ai_agent_optimal = AIAgent(-0.42311679935207946, -0.6050074206943761, -0.7073960737188766, 0.026416007419959753)
     # ai_agent_optimal = AIAgent(-0.2031239239304267, -0.9012882787168671, -0.36325534782999528, 0.873019662877332)
-    ai_agent_optimal = AIAgent(-0.16044284177187973, -0.0029765700302580283, -0.8278209387332695, 0.06613546738395593)
+    ai_agent_optimal = AIAgent(-0.16044284177187973, -0.0029765700302580283, -2.8278209387332695, -0.8278209387332695,0.06613546738395593)
     # ai_agent_optimal = AIAgent(-0.41503952099193375, -0.9789465866960196, -0.8851436530882919, 0.43928167880791913)
-    # ai_agent_optimal_2 = AIAgent(-0.184483, -0.510066, -0.35663, 0.760666)
+    # ai_agent_optimal = AIAgent(-0.184483, -0.510066, -0.35663, 0.760666)
+    # ai_agent_optimal = AIAgent(-0.05143980596091547, -0.09968895508113776, -0.5582143229074196, -0.11405974783510944, 0.4307136360062388)
+    # ai_agent_optimal = AIAgent(-0.061878540458378706, -0.39842537348710444, -1.0704459841477714, -0.3942375105538531, 0.3735581840697391)
+    # ai_agent_optimal = AIAgent(-0.17375255574537374, -0.0007320420541267615, -0.9857605318230909, -0.04619818766884179, 0.11413067743081642)
+    # ai_agent_optimal = AIAgent(random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(0, 1))
     print(run_tetris_game_with_graphics(ai_agent=ai_agent_optimal))
     # print(run_tetris_game_with_graphics(ai_agent=ai_agent_optimal_2))
     # run_tetris_game_with_graphics(play_with_human=True, ai_agent=ai_agent_optimal)
@@ -228,4 +240,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    k = Process(target=main)
+    k.start()

@@ -24,7 +24,7 @@ def setup_logging():
     log_queue = multiprocessing.Queue()
 
     # Create handlers
-    file_handler = logging.FileHandler('test.log')
+    file_handler = logging.FileHandler('test_5p_big_bfs.log')
     console_handler = logging.StreamHandler()
 
     # Create formatters and add it to handlers
@@ -67,17 +67,17 @@ class TetrisGeneticAlgorithm:
                 higher_is_better=True,
                 operators_sequence=[
                     WeightCrossover(probability=0.65, arity=2),
-                    WeightMutation(probability=0.45, arity=10)
+                    WeightMutation(probability=0.35, arity=10)
                 ],
                 selection_methods=[(TournamentSelection(tournament_size= 3,higher_is_better=True), 1)],
-                elitism_rate=0.3
+                elitism_rate=0.2
             ),
             population_evaluator=PopulationEvaluator(),
             breeder=SimpleBreeder(),
             max_generation=self.generations,
             statistics=BestAverageWorstStatistics(),
             termination_checker=GenerationTerminationChecker(generations_limit=self.generations,
-                                                             fitness_threshold=20000),
+                                                             fitness_threshold=10000),
             max_workers=1
         )
         ga.evolve()
@@ -105,7 +105,7 @@ def run_ga():
     logger = logging.getLogger(__name__)
     logger.info("Starting Genetic Algorithm...\n")
     try:
-        ga = TetrisGeneticAlgorithm(population_size=20, generations=2)
+        ga = TetrisGeneticAlgorithm(population_size=50, generations=15)
         ga.run()
         best_weights = ga.best_individual.weights
         ga_done_event.set()

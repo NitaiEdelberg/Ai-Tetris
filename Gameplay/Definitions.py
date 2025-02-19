@@ -1,5 +1,4 @@
 # Game Definitions
-from turtledemo.nim import COLOR
 
 import numpy as np
 GRID_SIZE = 32 # Size of the screen
@@ -23,6 +22,7 @@ GREEN = (83, 218, 63)
 PURPLE = (221, 10, 178)
 RED = (234, 20, 28)
 PINK = (255,51,255)
+GRAY = (211,211,211)
 
 # Shapes
 SHAPES = {

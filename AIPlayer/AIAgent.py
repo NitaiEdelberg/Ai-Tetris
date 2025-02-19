@@ -6,8 +6,8 @@ from AIPlayer.AIBrain import AIBrain
 
 class AIAgent:
 
-    def __init__(self, bumpiness = random.uniform(-10, 0), max_height = random.uniform(-10, 0), holes = random.uniform(-10, 0), cleared_rows = random.uniform(0, 10)):
-        self.weights = [bumpiness, max_height, holes, cleared_rows]  # Example weights: bumpiness, max_height, holes, cleared_rows
+    def __init__(self, bumpiness = random.uniform(-10, 0), max_height = random.uniform(-10, 0), holes = random.uniform(-10, 0), shape_placement = random.uniform(-10, 0),cleared_rows = random.uniform(0, 10)):
+        self.weights = [bumpiness, max_height, holes, shape_placement,cleared_rows]  # Example weights: bumpiness, max_height, holes, shape_placement,cleared_rows
         self.best_moves = []
 
 

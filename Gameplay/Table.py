@@ -245,6 +245,21 @@ class Table:
 
         return aggregate_height
 
+    def get_max_height(self):
+        """
+        Calculate the aggregate height of the board.
+        :return: Maximum column height.
+        """
+        max_height = 0
+
+        for col in range(self.cols):
+            for row in range(self.rows):
+                if self.board[row][col] != 0 and max_height < self.rows - row:
+                    max_height = self.rows - row
+                    break
+
+        return max_height
+
 
     def get_holes(self):
         """
@@ -268,8 +283,9 @@ class Table:
         """
         return {
             'bumpiness': self.get_bumpiness(),
-            'max_height': self.get_aggregate_height(),
-            'holes': self.get_holes() - self.holes_before,
+            'max_height': self.get_max_height(),
+            'holes': self.get_holes(),
+            'shape_placement': self.rows - self.shape_position[0],
             'cleared': self._rows_cleared
         }
 

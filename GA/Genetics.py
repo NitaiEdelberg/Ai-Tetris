@@ -21,8 +21,8 @@ class WeightCreator(Creator):
 class WeightIndividual(Individual):
     def __init__(self, fitness):
         super().__init__(fitness)
-        # self.weights = [random.uniform(-1, 0) for _ in range(3)] + [random.uniform(0, 1)]  # Example: bumpiness, height, holes, cleared rows
-        self.weights = [-0.16044284177187973, -0.0029765700302580283, -0.8278209387332695, 0.06613546738395593]  # Example: bumpiness, height, holes, cleared rows
+        self.weights = [random.uniform(-1, 0) for _ in range(4)] + [random.uniform(0, 1)]  # Example: bumpiness, height, holes, shape_placement, cleared rows
+        # self.weights = [-0.16044284177187973, -0.0029765700302580283, -0.8278209387332695, 0.06613546738395593]  # Example: bumpiness, height, holes, cleared rows
 
     def show(self):
         return self.weights
@@ -46,5 +46,6 @@ class WeightMutation(GeneticOperator):
             idx = random.randint(0, len(ind.weights) - 1)
             # Gaussian mutation, mean=0, standard deviation based on the weight
             mutation = random.gauss(0, abs(ind.weights[idx]) * 0.1)  # Adjust standard deviation
+            # mutation = random.choice([-0.1,0.1]) * abs(ind.weights[idx])  # Adjust standard deviation
             ind.weights[idx] += mutation
         return individuals
