@@ -65,7 +65,7 @@ Based on our research and manual gameplay, we identified four key board features
 
 By incorporating these features as weights into our GA, we enabled it to make better strategic decisions when selecting placements for new pieces.
 
-### Genetic Algorithm (GA) Implementation Overview
+## Genetic Algorithm (GA) Implementation Overview
 
 Our AI uses Genetic Algorithms (GA) to learn how to play Tetris by continuously improving its decision-making through iterative learning over multiple generations that we are running over serval processing cores (since we didn't have access to GPU). The key components of our GA approach are:
 
@@ -91,25 +91,45 @@ Our AI uses Genetic Algorithms (GA) to learn how to play Tetris by continuously 
 
 This iterative process allows the AI to refine its gameplay over time, adapting its decision-making by refining the weights of the individual through each iteration. By continuously evolving, the AI can optimize its strategy for long-term survival and higher scores in Tetris.
 
+![5_games_GA.gif](5_games_GA.gif)
+
 Now we need to implement a method to scan the board and find the best placement of the next piece that is dropping, evaluating each location in the board based of the individual's weights.
 
-## Basic Solver
-based on low rows.......
+## Column Scanner
+The algorithm implements a straightforward brute-force approach to determining the best move for a given Tetris piece. The algorithm iterates over all possible rotations and placements of the current shape, evaluating each configuration based on a heuristic score.
+
+### **How It Works**
+
+The algorithm follows a systematic approach to determining the optimal placement for a Tetris piece. It first explores all possible rotations of the shape, ensuring that every orientation is considered. Once rotated, it evaluates each potential column position where the piece can fit. After identifying valid placements, the piece is simulated to drop to the lowest available row. The resulting board state is then analyzed using our heuristic evaluation metrics. The algorithm tracks the highest-scoring move configuration and stores the sequence of actions required to execute it.
+
+### **Advantages**
+
+- **Simple:** The solver explores most of the possible placements, ensuring it finds a reasonable move given the heuristic evaluation.
+- **Effective**: The algorithm places the shapes in the possible placement without simulating the way to get there, thus saving a lot of computing time.
+- **Deterministic:** Always chooses the same move for a given board state, making it predictable and easy to debug.
+
+### **Limitations**
+
+- **Limited exploration**: The algorithm places the new piece only on top of the columns, thus missing some options to 'slide under' the new piece below the existing Tetriminos. Limiting the possible moves that are explored and there is no grantee the algorithm will pick the best possible move.
+
+![col_scan.gif](col_scan.gif)
 
 ## Breadth-First Search (BFS)
 
-To improve upon the basic solver, that can miss placements that aren't at the top of a column ,we implemented BFS, which explores all possible placements for a given piece, **including sliding into gaps**. The BFS algorithm identify all the possible moves and records the way to the best placement during the run.
+To improve upon the Column Scanner, that can miss placements that aren't at the top of a column ,we implemented BFS, which explores all possible placements for a given piece, **including sliding into gaps**. The BFS algorithm identify all the possible moves and records the way to the best placement during the run.
 
-**Why BFS Instead of the Simple Solver?** The simple solver only considers immediate piece placement without evaluating more complex moves, such as sliding pieces into better positions. The BFS allows the AI to search deeper into the board's state space, considering all the possible placements available on the board, thus significantly enhances AI performance by ensuring more strategic placements and reducing the number of trapped spaces.
+### **Why BFS Instead of the Simple Solver?** 
+The simple solver only considers immediate piece placement without evaluating more complex moves, such as sliding pieces into better positions. The BFS allows the AI to search deeper into the board's state space, considering all the possible placements available on the board, thus significantly enhances AI performance by ensuring more strategic placements and reducing the number of trapped spaces.
 
-**Advantages of BFS Over the Simple Solver:**
+### **Advantages:**
+
+- **Guarantees the best move:** Always finds the best move possible because it explores all the valid positions on the board.
 
 - **Handles Complex Moves:** Finds placements involving slides and rotations that a simple height-based solver would miss.
 
+- **Records Best Moves**: Unlike the Column Scanner, the BFS always saves the way it traversed to get to the best placement. Which means we don't need to calculate the path to the best placement separately. This approach simulates a more realistic gameplay.
 
-- **Records Best Moves**: Unlike the basic search, the BFS always saves the way it traversed to get to the best placement. Which means we don't need to calculate the path to the best placement separately.
-
-**Limitations of BFS:**
+### **Limitations:**
 
 - **Increased Computational Cost:** BFS requires significantly more processing power than the simple solver due to its exhaustive search.
 
@@ -138,10 +158,10 @@ One of the major bottlenecks in our initial BFS implementation was the exhaustiv
 
 To enhance learning efficiency, we fine-tuned the hyperparameters of our **Genetic Algorithm (GA)**. Key adjustments included:
 
-- **Mutation Rate**: Adjusted to maintain diversity while ensuring convergence.
-- **Crossover Probability**: Tuned to balance exploration and exploitation.
+- **Mutation Rate**: Adjusted to maintain diversity while ensuring convergence. After testing hours of games we found that mutation of 0.35 and arity of 10 helps the learning proccess grow. 
+- **Crossover Probability**: Tuned to balance exploration and exploitation. After long research we found out that crossover of 0.65 and arity of 2 helps the learning GA.
 - **Tournament Selection Parameters**: Optimized selection pressure to ensure strong individuals continue while maintaining population diversity.
-- **Elitism Rate**: The individuals that are passed to the next generation, and from them we do the crossovers and mutations.
+- **Elitism Rate**: The individuals that are passed to the next generation, and from them we do the crossovers and mutations. we maintain 0.2 of the best Individuals.
 
 [ADD GRAPH SHOWING THE EXPIREMENTS. WRITE THE VALUES WE ENDED UP WITH]
 
@@ -263,11 +283,12 @@ This project implements **Tetris AI using a genetic algorithm**. The AI improves
 ## Future Improvements & Conclusions
 ### Alternative AI Approaches
 - Exploring Reinforcement Learning for better long-term strategy.
+- needed complex claculation force to leran faster. each change in hyper paramters takes hours of runing  TODO
 
 ### Conclusions
-- BFS with weights consideration aren't steady. We noticed that although the BFS scans all the possible places when searching for the next piece, it sometimes doesn't choose the "right" placement. We tested the model with BFS simulation over our board.
+- The AI game solver playes better and faster then the human (probblay better then the best tetris player in the world). the scores reach more then score of 100,000 *without calculting score that grow with levels
 - Using different processors without graphics is needed to shorter each generation running time.
-- Finding the hyper paramters for the GA aboulatuon is the main problem based on calaculation time and complexity
+- Finding the hyper paramters for the GA aboulatuon is the main problem based on calaculation time and complexity.
 
 ## How to Use
 ### Installation & Running the Game

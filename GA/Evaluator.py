@@ -2,7 +2,7 @@ import random
 
 from eckity.evaluators.simple_individual_evaluator import SimpleIndividualEvaluator
 from eckity.fitness import Fitness
-from Gameplay.GameSetup import run_tetris_game
+from Gameplay.GameSetup import run_tetris_game, run_tetris_game_with_graphics
 from AIPlayer.AIAgent import AIAgent
 
 class Evaluator(SimpleIndividualEvaluator):
@@ -18,6 +18,7 @@ class Evaluator(SimpleIndividualEvaluator):
         # Simulate the game and return the score
         avg_score = 0
         for i in range(rounds):
-            avg_score += run_tetris_game(ai_agent=ai_agent, max_moves=1000)
+            avg_score += run_tetris_game(ai_agent=ai_agent)
+            # avg_score += run_tetris_game_with_graphics(ai_agent=ai_agent)
         return avg_score/rounds # Return a fitness metric (e.g. average score)
 

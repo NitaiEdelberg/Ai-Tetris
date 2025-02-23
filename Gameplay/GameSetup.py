@@ -217,6 +217,7 @@ def run_tetris_game_with_graphics(play_with_human : bool = False, ai_agent : AIA
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 waiting = False
     pygame.quit()
+
     if AIAgent:
         return ai_score
     else:
@@ -226,12 +227,13 @@ def run_tetris_game_with_graphics(play_with_human : bool = False, ai_agent : AIA
 def main():
     # ai_agent_optimal = AIAgent(-0.42311679935207946, -0.6050074206943761, -0.7073960737188766, 0.026416007419959753)
     # ai_agent_optimal = AIAgent(-0.2031239239304267, -0.9012882787168671, -0.36325534782999528, 0.873019662877332)
-    ai_agent_optimal = AIAgent(-0.16044284177187973, -0.0029765700302580283, -2.8278209387332695, -0.8278209387332695,0.06613546738395593)
+    # ai_agent_optimal = AIAgent(-0.16044284177187973, -0.0029765700302580283, -0.8278209387332695, -0.8278209387332695,1.06613546738395593)
     # ai_agent_optimal = AIAgent(-0.41503952099193375, -0.9789465866960196, -0.8851436530882919, 0.43928167880791913)
     # ai_agent_optimal = AIAgent(-0.184483, -0.510066, -0.35663, 0.760666)
     # ai_agent_optimal = AIAgent(-0.05143980596091547, -0.09968895508113776, -0.5582143229074196, -0.11405974783510944, 0.4307136360062388)
     # ai_agent_optimal = AIAgent(-0.061878540458378706, -0.39842537348710444, -1.0704459841477714, -0.3942375105538531, 0.3735581840697391)
     # ai_agent_optimal = AIAgent(-0.17375255574537374, -0.0007320420541267615, -0.9857605318230909, -0.04619818766884179, 0.11413067743081642)
+    ai_agent_optimal = AIAgent(-0.1803340898754845, -0.0294471755036216, -0.9725055417051492, -0.30972128868572735, 0.13392383443427142)
     # ai_agent_optimal = AIAgent(random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(0, 1))
     print(run_tetris_game_with_graphics(ai_agent=ai_agent_optimal))
     # print(run_tetris_game_with_graphics(ai_agent=ai_agent_optimal_2))

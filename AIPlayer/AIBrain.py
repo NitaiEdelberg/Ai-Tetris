@@ -4,8 +4,6 @@ import numpy as np
 import json
 from datetime import datetime
 
-from PIL.ImageChops import offset
-
 from Gameplay.Definitions import POINTS_PER_LINE
 from Gameplay.Table import Table
 
@@ -29,8 +27,7 @@ class AIBrain:
                 self.weights[0] * statistics['bumpiness'] +
                 self.weights[1] * statistics['max_height'] +
                 self.weights[2] * statistics['holes'] +
-                # self.weights[3] * statistics['shape_placement'] +
-                self.weights[4] * (POINTS_PER_LINE[statistics['cleared']] / POINTS_PER_LINE[1])
+                self.weights[3] * (POINTS_PER_LINE[statistics['cleared']] / POINTS_PER_LINE[1])
         )
         # Log the evaluation details
         self.log_data['scores'].append({
@@ -102,16 +99,15 @@ class AIBrain:
             for action in ['drop', 'left', 'right', 'rotate']:
 
                 if current_state.current_shape_name == 'O' and action == 'rotate': #Skip O rotations
-                    pass
+                    continue
 
                 new_state: Table = deepcopy(current_state)
                 is_valid, has_landed, new_pos, new_orientation = self._simulate_action(new_state, action)
 
                 if not is_valid:
-                    pass
+                    continue
 
                 new_moves = moves + [action]
-
 
                 if has_landed:
                     score = self._evaluate_board(new_state)

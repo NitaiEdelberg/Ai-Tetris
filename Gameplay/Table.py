@@ -57,6 +57,9 @@ class Table:
             self.shape_orientation = (self.shape_orientation + 90) % 360
             if self.can_place(rotated_shape, self.shape_position):
                 self.current_shape = rotated_shape
+                return True
+            else:
+                return False
 
     def shift_right(self):
         """
@@ -66,6 +69,9 @@ class Table:
             new_position = (self.shape_position[0], self.shape_position[1] + 1)
             if self.can_place(self.current_shape, new_position):
                 self.shape_position = new_position
+                return True
+            else:
+                return False
 
     def shift_left(self):
         """
@@ -75,6 +81,9 @@ class Table:
             new_position = (self.shape_position[0], self.shape_position[1] - 1)
             if self.can_place(self.current_shape, new_position):
                 self.shape_position = new_position
+                return True
+            else:
+                return False
 
     def drop(self):
         """
@@ -86,6 +95,7 @@ class Table:
                 self.shape_position = new_position
             else:
                 self.place_shape()
+        return True
 
     def shape_reposition(self, new_position, new_shape_orientation, reset_shape_landed = False) -> bool:
         """
@@ -166,6 +176,7 @@ class Table:
                     else:
                         self.board[row + r, col + c] = self.current_shape[1, 1]
         self.current_shape = None
+        self.current_shape_name = None
         self._shape_landed = True
         self._clear_rows()
 
@@ -290,7 +301,6 @@ class Table:
             'bumpiness': self.get_bumpiness(),
             'max_height': self.get_max_height(),
             'holes': self.get_holes(),
-            'shape_placement': self.rows - self.shape_position[0],
             'cleared': self._rows_cleared
         }
 

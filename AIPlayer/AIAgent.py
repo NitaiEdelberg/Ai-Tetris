@@ -6,9 +6,10 @@ from AIPlayer.AIBrain import AIBrain
 
 class AIAgent:
 
-    def __init__(self, bumpiness = random.uniform(-10, 0), max_height = random.uniform(-10, 0), holes = random.uniform(-10, 0), shape_placement = random.uniform(-10, 0),cleared_rows = random.uniform(0, 10)):
-        self.weights = [bumpiness, max_height, holes, shape_placement,cleared_rows]  # Example weights: bumpiness, max_height, holes, shape_placement,cleared_rows
+    def __init__(self, bumpiness = random.uniform(-10, 0), max_height = random.uniform(-10, 0), holes = random.uniform(-10, 0),cleared_rows = random.uniform(0, 10)):
+        self.weights = [bumpiness, max_height, holes, cleared_rows]  # Example weights: bumpiness, max_height, holes, shape_placement,cleared_rows
         self.best_moves = []
+        self.last_shape_name = None
 
 
     def choose_action(self, table):
@@ -19,16 +20,14 @@ class AIAgent:
 
         best_score = -1
 
-        if len(self.best_moves) == 0 or table.current_shape is None:
-            if table.current_shape is None and len(self.best_moves) != 0:
-                print("Shape is NONE!", self.best_moves)
+        if len(self.best_moves) == 0 or table.current_shape_name != self.last_shape_name:
+            if (table.current_shape_name is None or table.current_shape_name == self.last_shape_name) and len(self.best_moves) != 0:
+                print(f"Current shape: {table.current_shape_name} last shape: {self.last_shape_name} moves left:", self.best_moves)
+
             brain = AIBrain(copy.deepcopy(table), self.weights)
             best_score, self.best_moves = brain.find_best_placement_column_scan()
 
-
-
-        # if len(self.best_moves) == 0:
-        #     return
+            self.last_shape_name = table.current_shape_name
 
         best_action = self.best_moves.pop(0)
         # print(best_action)
