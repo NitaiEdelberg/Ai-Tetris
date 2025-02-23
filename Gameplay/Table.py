@@ -87,12 +87,15 @@ class Table:
             else:
                 self.place_shape()
 
-    def shape_reposition(self, new_position, new_shape_orientation, reset_shape_landed = False):
+    def shape_reposition(self, new_position, new_shape_orientation, reset_shape_landed = False) -> bool:
         """
         Move the current shape to the specified position and orientation.
         :param new_position: (row, col) to which the shape should be moved.
         :param new_shape_orientation: An integer (0, 90, 180, 270) denoting the target orientation.
         """
+        if reset_shape_landed:
+            self._shape_landed = False
+
         if self.current_shape is not None:
             # 1. Calculate how many 90° rotations we need
             #    E.g., if current shape_orientation=90 and new_shape_orientation=270,
@@ -111,7 +114,8 @@ class Table:
                 rotated_shape = np.rot90(rotated_shape)
 
             # 4. Check if we can place the newly rotated shape at new_position
-            if self.can_place(rotated_shape, new_position):
+            is_valid = self.can_place(rotated_shape, new_position)
+            if is_valid:
                 self.current_shape = rotated_shape
                 self.shape_position = new_position
                 self.shape_orientation = new_shape_orientation
@@ -120,8 +124,9 @@ class Table:
                 self.current_shape = old_shape
                 self.shape_position = old_position
                 self.shape_orientation = old_orientation
-        if reset_shape_landed:
-            self._shape_landed = False
+
+            return is_valid
+        return False
 
     def can_place(self, shape, position):
         """

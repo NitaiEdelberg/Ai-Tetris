@@ -4,6 +4,8 @@ import numpy as np
 import json
 from datetime import datetime
 
+from PIL.ImageChops import offset
+
 from Gameplay.Definitions import POINTS_PER_LINE
 from Gameplay.Table import Table
 
@@ -59,7 +61,7 @@ class AIBrain:
 
         return is_valid, table.is_shape_landing(), table.shape_position, table.shape_orientation
 
-    def find_best_placement(self):
+    def find_best_placement_bfs(self):
         """Find the best landing position for the current piece using BFS."""
         # Reset log data for new search
         self.log_data = {
@@ -110,27 +112,6 @@ class AIBrain:
 
                 new_moves = moves + [action]
 
-                # from Gameplay import Display, Definitions
-                # import pygame
-                # pygame.display.get_surface().fill((0, 0, 0))
-                # Display.draw_grid(pygame.display.get_surface(), Definitions.SCREEN_WIDTH)
-                #
-                # for *position, orinat in visited:
-                #     Display.draw_shape(
-                #         pygame.display.get_surface(),
-                #         Definitions.SHAPES[new_state.current_shape_name],
-                #         position,
-                #         orinat,
-                #         fake=True
-                #     )
-                #
-                # Display.draw_board(
-                #     pygame.display.get_surface(), new_state.board, new_state.current_shape, new_state.current_shape_name,
-                #     new_state.shape_position,
-                #     x_offset=0)
-                #
-                # pygame.display.flip()
-                # pygame.event.pump()
 
                 if has_landed:
                     score = self._evaluate_board(new_state)
@@ -158,6 +139,47 @@ class AIBrain:
         # self._save_log()
 
         return best_score, best_moves
+
+    def find_best_placement_column_scan(self):
+        """Find the best placement by scanning each row and rotation."""
+        best_score = float('-inf')
+        best_moves = []
+        initial_state = deepcopy(self.table)
+
+
+        # Try all 4 possible rotations (except for 'O' piece that doesn't rotate)
+        for rotation in range(4 if initial_state.current_shape_name != 'O' else 1):
+            rotated_state = deepcopy(initial_state)
+            for _ in range(rotation):
+                self._simulate_action(rotated_state, 'rotate')
+
+            # Try all possible column positions
+
+            effective_width = int(np.sum(np.any(rotated_state.current_shape, axis=0)))
+            offset = int(np.argmax(np.concatenate((~np.all(rotated_state.current_shape == 0, axis=0), [True]))))
+            for col in range(- offset, initial_state.cols - offset - effective_width + 1):
+                test_state = deepcopy(rotated_state)
+                is_valid = test_state.shape_reposition((0, col), test_state.shape_orientation)
+
+                if not is_valid:
+                    continue
+
+                # Drop the piece to the lowest valid position
+                has_landed = False
+                while not has_landed:
+                    has_landed = self._simulate_action(test_state,'drop')[1]
+
+                score = self._evaluate_board(test_state)
+
+                # Track best-scoring move
+                if score > best_score:
+                    best_score = score
+                    best_moves = ['rotate'] * rotation + [
+                        'right' if col > initial_state.shape_position[1] else 'left'] * abs(
+                        col - initial_state.shape_position[1]) + ['drop'] * (test_state.shape_position[0] + 1)
+
+        return best_score, best_moves
+
 
     def _save_log(self):
         """Save the log data to a file."""

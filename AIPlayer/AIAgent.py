@@ -23,12 +23,14 @@ class AIAgent:
             if table.current_shape is None and len(self.best_moves) != 0:
                 print("Shape is NONE!", self.best_moves)
             brain = AIBrain(copy.deepcopy(table), self.weights)
-            best_score, self.best_moves = brain.find_best_placement()
+            best_score, self.best_moves = brain.find_best_placement_column_scan()
+
+
 
         # if len(self.best_moves) == 0:
         #     return
 
-        best_action = self.best_moves.pop()
+        best_action = self.best_moves.pop(0)
         # print(best_action)
         if best_action == 'rotate':
             table.rotate()
