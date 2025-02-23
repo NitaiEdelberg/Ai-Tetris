@@ -1,28 +1,17 @@
 # Game Definitions
-
 import numpy as np
+
 GRID_SIZE = 32 # Size of the screen
 BOARD_WIDTH, BOARD_HEIGHT = 10, 20 # Size of the board
 SCREEN_WIDTH, SCREEN_HEIGHT = GRID_SIZE * BOARD_WIDTH, GRID_SIZE * BOARD_HEIGHT
 DROP_INTERVAL = 500  # Time in milliseconds between automatic drops
-FPS = 75 #frames per seconds
+HUMAN_FPS = 20 # frames per seconds for human
+AI_FPS = 75 # frames per seconds for computer
 PLAY_WITH_AI = True
-PLAY_WITH_HUMAN = True
+PLAY_WITH_HUMAN = False
 GRAPHICS_ON = True
 AI_PLAY_WITH_GRAPHIC = True
 PROCESS_NUM = 10
-
-# Colors (RGB)
-WHITE = (255, 255, 255)
-CYAN = (1, 237, 250)
-NAVY = (46, 46, 132)
-ORANGE = (220, 88, 42)
-YELLOW = (254,221,0)
-GREEN = (83, 218, 63)
-PURPLE = (221, 10, 178)
-RED = (234, 20, 28)
-PINK = (255,51,255)
-GRAY = (211,211,211)
 
 # Shapes
 SHAPES = {
@@ -63,6 +52,24 @@ SHAPES = {
         ])
     }
 
+
+
+# Design
+
+# Colors (RGB)
+WHITE = (255, 255, 255)
+CYAN = (1, 237, 250)
+NAVY = (46, 46, 132)
+ORANGE = (220, 88, 42)
+YELLOW = (254,221,0)
+GREEN = (83, 218, 63)
+PURPLE = (221, 10, 178)
+RED = (234, 20, 28)
+PINK = (255,51,255)
+GRAY = (211,211,211)
+NAVY2 = (46, 46, 132)
+BLACK = (0, 0, 0)
+
 SHAPES_COLORS = {
         'I': CYAN,
         'J': NAVY,
@@ -73,12 +80,7 @@ SHAPES_COLORS = {
         'T': PURPLE
     }
 
-COLOR_SHAPES = [PINK,CYAN,NAVY,ORANGE,YELLOW,GREEN,RED,PURPLE]
-
-
-# Display design
-
-
+COLOR_SHAPES = [PINK, CYAN, NAVY, ORANGE, YELLOW, GREEN, RED, PURPLE]
 
 # Font size
 FONT_SIZE = 36
@@ -92,4 +94,4 @@ GAME_OVER_POS = (100, 100)
 DEFAULT_X_OFFSET = 0
 
 # Points
-POINTS_PER_LINE = [0,40, 100, 300, 1200]  #[NONE,SINGLE, DOUBLE, TRIPLE, TETRIS]
+POINTS_PER_LINE = [0,40, 100, 300, 1200]  #[NONE, SINGLE, DOUBLE, TRIPLE, TETRIS]

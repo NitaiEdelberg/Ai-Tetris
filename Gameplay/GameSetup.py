@@ -1,246 +1,134 @@
-import multiprocessing
-import random
 from multiprocessing import Process
-from threading import Thread
-
-# import pygame
+import pygame
 import sys
-import time
-
-from scipy.fft import ifft2
-from six import moves
-
+import os
 from AIPlayer.AIAgent import AIAgent
-from Gameplay.Table import Table
 from Gameplay import Display
 from Gameplay import Definitions
+from Gameplay.HumanHandler import HumanHandler
+from Gameplay.AIHandler import AIHandler
 
-# Timer
 def initialize_timer():
+    """
+    Use pygame to initialize the game timer.
+    """
     return pygame.time.get_ticks()
 
 def update_timer(start_time):
+    """
+    Update the timer when needed.
+    """
     current_time = pygame.time.get_ticks()
-    elapsed_time = (current_time - start_time) // 1000
-    return elapsed_time
+    return (current_time - start_time) // 1000
 
-# Handle human input
-def handle_human_input(keys, table):
-    if keys[pygame.K_LEFT]:
-        table.shift_left()
-    elif keys[pygame.K_RIGHT]:
-        table.shift_right()
-    elif keys[pygame.K_DOWN]:
-        table.drop()
-    elif keys[pygame.K_UP]:
-        table.rotate()
-
-def run_tetris_game(ai_agent: AIAgent, max_moves = float('inf')) -> int:
+def run_human_game():
     """
-    Run a Tetris game with AI only.
-
-    Parameters:
-    - ai_agent (AIAgent): The AI agent controlling the game.
-
-    Returns:
-    - int: AI score.
+    Runs the Tetris game for the human player in a separate window.
     """
-    ai_end_time = None
-
-    # Initialize Table Instance for AI
-    ai_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH)
-
-    # Initialize scoring and timer
-    start_time = time.time()
-    ai_score = 0
-
-    # Spawn initial shape
-    ai_table.spawn_next_shape()
-    moves_left = max_moves - 1
-
-    running = True
-
-    # Game loop
-    while running:
-        current_time = time.time()
-
-        # AI logic
-        ai_agent.choose_action(ai_table)
-
-        if ai_table.is_shape_landing():
-            lines_cleaned = ai_table.check_for_cleared_rows()
-            if lines_cleaned > 0:
-                ai_score += Definitions.POINTS_PER_LINE[lines_cleaned]
-            ai_table.spawn_next_shape()
-            moves_left -= 1
-
-        # Check game over for AI
-        if ai_table.game_over or moves_left == 0:
-            running = False
-            ai_end_time = int(current_time - start_time)
-            print(f"AI Score: {ai_score}, Time: {ai_end_time}")
-
-    return ai_score
-
-def run_tetris_game_with_graphics(play_with_human : bool = False, ai_agent : AIAgent = None) -> int:
-    human_end_time = None
-    ai_end_time = None
-
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "220,160"  # Human window starts here, next to the AI window
     pygame.init()
-    screen_width = Definitions.SCREEN_WIDTH * 2 if AIAgent and play_with_human else Definitions.SCREEN_WIDTH
-    screen = pygame.display.set_mode((screen_width, Definitions.SCREEN_HEIGHT))
-    clock = pygame.time.Clock()
+    screen = pygame.display.set_mode((Definitions.SCREEN_WIDTH, Definitions.SCREEN_HEIGHT)) # Set up the display window
+    pygame.display.set_caption("TETRIS - HUMAN PLAYER")  # Window title
+    clock = pygame.time.Clock() # Create a clock object to control the frame rate
 
-    # Initialize Table Instances
-    human_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if play_with_human else None
-    ai_table = Table(Definitions.BOARD_HEIGHT, Definitions.BOARD_WIDTH) if AIAgent else None
-
-    # Initialize scoring and timer
+    human = HumanHandler() # Create an instance of the HumanHandler class to manage the human player's actions
     start_time = initialize_timer()
-    human_score = 0 if play_with_human else None
-    ai_score = 0 if AIAgent else None
-
-    # Spawn initial shapes
-    if human_table:
-        human_table.spawn_next_shape()
-    if ai_table:
-        ai_table.spawn_next_shape()
-
-    human_last_drop_time = pygame.time.get_ticks() if human_table else None
-    ai_last_drop_time = pygame.time.get_ticks() if ai_table else None
-
     running = True
-    human_active = True if play_with_human else False
-    ai_active = True if AIAgent else False
 
-    # Game Loop
     while running:
-        clock.tick(Definitions.FPS)
-
-        #******************************** human ***********************************
-        # Event handling
-        if play_with_human:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-
-                if human_table and human_active and event.type == pygame.KEYDOWN:
-                    handle_human_input(pygame.key.get_pressed(), human_table)
-
-        # Handle continuous input for human
-        if human_table and human_active:
-            keys = pygame.key.get_pressed()
-            handle_human_input(keys, human_table)
-
-        # Automatic drop logic for human player
-        current_time = pygame.time.get_ticks()
-        if human_table and human_active and current_time - human_last_drop_time > Definitions.DROP_INTERVAL:
-            if not human_table.is_shape_landing():
-                human_table.drop()
-            else:
-                lines_cleaned = human_table.check_for_cleared_rows()
-                if lines_cleaned > 0:
-                    human_score += Definitions.POINTS_PER_LINE[lines_cleaned]
-                human_table.spawn_next_shape()
-            human_last_drop_time = current_time
-
-        # ************************************ AI *************************************************
-        # Update AI player
-        if ai_table and ai_active and Definitions.PLAY_WITH_AI:
-            ai_agent.choose_action(ai_table)
-            # if current_time - ai_last_drop_time > Definitions.DROP_INTERVAL:
-            #     if not ai_table.is_shape_landing():
-            #         #ai_table.drop()
-            #         continue
-            #     else:
-            #         lines_cleaned = ai_table.check_for_cleared_rows()
-            #         if lines_cleaned > 0:
-            #             ai_score += Definitions.POINTS_PER_LINE[lines_cleaned]
-            #         ai_table.spawn_next_shape()
-            #     ai_last_drop_time = current_time
-            if ai_table.is_shape_landing():
-                lines_cleaned = ai_table.check_for_cleared_rows()
-                if lines_cleaned > 0:
-                    ai_score += Definitions.POINTS_PER_LINE[lines_cleaned]
-                ai_table.spawn_next_shape()
-            pygame.event.pump()
-
-        # Update timers and scores
-        elapsed_time = update_timer(start_time)
-
-        # Check game over for human
-        if human_table and human_active and human_table.game_over:
-            human_active = False
-            human_end_time = elapsed_time
-
-        # Check game over for AI
-        if ai_table and ai_active and ai_table.game_over:
-            ai_active = False
-            ai_end_time = elapsed_time
-
-        # End game if both players are inactive
-        if not human_active and not ai_active:
-            running = False
-
-        # Draw everything
-        if Definitions.GRAPHICS_ON:
-            screen.fill((0, 0, 0))
-            Display.draw_grid(screen, 0)
-
-            if human_table:
-                Display.draw_board(screen, human_table.board, human_table.current_shape, human_table.current_shape_name,
-                                   human_table.shape_position, x_offset=0)
-                if human_active:
-                    Display.draw_timer_and_score(screen, elapsed_time, human_score, 0)
-                else:
-                    Display.draw_timer_and_score(screen, human_end_time, human_score, 0)
-                if not human_active:
-                    Display.draw_game_over(screen, human_score, human_end_time, 0)
-
-            if ai_table and Definitions.AI_PLAY_WITH_GRAPHIC:
-                Display.draw_grid(screen, Definitions.SCREEN_WIDTH)
-                Display.draw_board(screen, ai_table.board, ai_table.current_shape, ai_table.current_shape_name,
-                                   ai_table.shape_position, x_offset=Definitions.SCREEN_WIDTH) if play_with_human and AIAgent else Display.draw_board(screen, ai_table.board, ai_table.current_shape, ai_table.current_shape_name,
-                                   ai_table.shape_position, x_offset=0)
-                if ai_active:
-                    Display.draw_timer_and_score(screen, elapsed_time, ai_score, Definitions.SCREEN_WIDTH) if play_with_human and AIAgent else Display.draw_timer_and_score(screen, elapsed_time, ai_score, 0)
-                else:
-                    Display.draw_timer_and_score(screen, ai_end_time, ai_score, Definitions.SCREEN_WIDTH) if play_with_human and AIAgent else Display.draw_timer_and_score(screen, ai_end_time, ai_score, 0)
-                if not ai_active:
-                    Display.draw_game_over(screen, ai_score, ai_end_time, Definitions.SCREEN_WIDTH) if play_with_human else Display.draw_game_over(screen, ai_score, ai_end_time, 0)
-
-        pygame.display.flip()
-
-    waiting = play_with_human
-    while waiting:
+        clock.tick(Definitions.HUMAN_FPS) # Control the game loop to run at the specified FPS
+        # Check for user input (quit event or pressed 'Q' key for quiting)
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
-                waiting = False
-    pygame.quit()
+                running = False
 
-    if AIAgent:
-        return ai_score
-    else:
-        return human_score
+        elapsed_time = update_timer(start_time) # Calculate the elapsed time since the game started
+        human.update(elapsed_time)
+        screen.fill((0, 0, 0)) # Clear the screen and fill it with a black background
+        Display.draw_grid(screen, 0) # Draw the game grid
+        # Draw the current game board and the shapes on the screen
+        Display.draw_board(screen, human.table.board, human.table.current_shape, human.table.current_shape_name,
+                           human.table.shape_position, x_offset=0)
+        # Draw the human timer and score on the screen
+        Display.draw_timer_and_score(screen, elapsed_time if human.active else human.end_time, human.score, 0)
 
-# Main Game Loop
+        if not human.active: # If the game is over, display the game over screen
+            Display.draw_game_over(screen, human.score, human.end_time, 0)
+
+        pygame.display.flip() # Update the display with the new content
+
+    pygame.quit() # Quit pygame when the game loop ends
+
+
+def run_ai_game(ai_agent):
+    """
+    Runs the Tetris game for the AI player in a separate window.
+    """
+    pygame.init()
+    screen = pygame.display.set_mode((Definitions.SCREEN_WIDTH, Definitions.SCREEN_HEIGHT))  # Set up the display window
+    pygame.display.set_caption("TETRIS - AI PLAYER")  # Window title
+    clock = pygame.time.Clock() # Create a clock object
+
+    ai = AIHandler(ai_agent) # Create an instance of the AIHandler class to manage the AI player's actions
+    start_time = initialize_timer()
+    running = True
+
+    while running:
+        clock.tick(Definitions.AI_FPS) # Control the game loop to run at the specified FPS
+
+        for event in pygame.event.get():  # Check for user input (quit event)
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
+                running = False
+
+        elapsed_time = update_timer(start_time) # Calculate the elapsed time since the game started
+        ai.update(elapsed_time) # Update the AI player's state based on elapsed time
+        screen.fill((0, 0, 0)) # Clear the screen and fill it with a black background
+        Display.draw_grid(screen, 0) # Draw the game grid
+        # Draw the current game board and the shapes on the screen
+        Display.draw_board(screen, ai.table.board, ai.table.current_shape, ai.table.current_shape_name,
+                           ai.table.shape_position, x_offset=0)
+        # Draw the timer and score on the screen
+        Display.draw_timer_and_score(screen, elapsed_time if ai.active else ai.end_time, ai.score, 0)
+
+        if not ai.active: # If the game is over, display the game over screen
+            Display.draw_game_over(screen, ai.score, ai.end_time, 0)
+
+        pygame.display.flip() # Update the display with the new content
+
+    pygame.quit() # Quit pygame when the game loop ends
+
+
 def main():
-    # ai_agent_optimal = AIAgent(-0.42311679935207946, -0.6050074206943761, -0.7073960737188766, 0.026416007419959753)
-    # ai_agent_optimal = AIAgent(-0.2031239239304267, -0.9012882787168671, -0.36325534782999528, 0.873019662877332)
-    # ai_agent_optimal = AIAgent(-0.16044284177187973, -0.0029765700302580283, -0.8278209387332695, -0.8278209387332695,1.06613546738395593)
-    # ai_agent_optimal = AIAgent(-0.41503952099193375, -0.9789465866960196, -0.8851436530882919, 0.43928167880791913)
-    # ai_agent_optimal = AIAgent(-0.184483, -0.510066, -0.35663, 0.760666)
-    # ai_agent_optimal = AIAgent(-0.05143980596091547, -0.09968895508113776, -0.5582143229074196, -0.11405974783510944, 0.4307136360062388)
-    # ai_agent_optimal = AIAgent(-0.061878540458378706, -0.39842537348710444, -1.0704459841477714, -0.3942375105538531, 0.3735581840697391)
-    # ai_agent_optimal = AIAgent(-0.17375255574537374, -0.0007320420541267615, -0.9857605318230909, -0.04619818766884179, 0.11413067743081642)
-    ai_agent_optimal = AIAgent(-0.1803340898754845, -0.0294471755036216, -0.9725055417051492, -0.30972128868572735, 0.13392383443427142)
-    # ai_agent_optimal = AIAgent(random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(-1, 0),random.uniform(0, 1))
-    print(run_tetris_game_with_graphics(ai_agent=ai_agent_optimal))
-    # print(run_tetris_game_with_graphics(ai_agent=ai_agent_optimal_2))
-    # run_tetris_game_with_graphics(play_with_human=True, ai_agent=ai_agent_optimal)
+    """
+    Starts the human and AI games in separate processes based on user input.
+    """
+    # Ask the user if they want to play
+    human_choice = input("Do you want to play? Press Y for yes and N for no: ").strip().upper()
+
+    # Ask the user if they want the AI to play
+    ai_choice = input("Do you want the AI to play? Press Y for yes and N for no: ").strip().upper()
+
+    if (human_choice != ('Y' or 'y')) and (ai_choice != ('Y' or 'y')):
+        print("Invalid input. Exiting game...")
+        return  # Exit if the input is invalid
+
+    print("starting the game..............")
+
+    if human_choice == ('Y' or 'y'):
+        human_process = Process(target=run_human_game)
+        human_process.start()
+
+    if ai_choice == ('Y' or 'y'):
+        ai_agent_optimal = AIAgent(-0.147593415829753, -0.16684726563044971, -0.7783947049391171, 0.03811992593777204)
+        ai_process = Process(target=run_ai_game, args=(ai_agent_optimal,))
+        ai_process.start()
+
+    if human_choice == ('Y' or 'y'): human_process.join()
+    if ai_choice == ('Y' or 'y'): ai_process.join()
+
     sys.exit()
 
 
+
 if __name__ == "__main__":
-    k = Process(target=main)
-    k.start()
+    main()

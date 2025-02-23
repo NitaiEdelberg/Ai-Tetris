@@ -1,6 +1,6 @@
 
 
-![Tetris_AI_logo.png](Tetris_AI_logo.png)
+![Tetris_AI_logo.png](Resources/Tetris_AI_logo.png)
 
 #### By Nitai Edelberg & Ido Toker
 
@@ -8,20 +8,28 @@
 ### What is Tetris?
 Tetris is a classic puzzle game created by Alexey Pajitnov in 1984. The objective of the game is to manipulate falling geometric shapes called Tetriminos to create and clear full horizontal lines on the board. When a line is cleared, it disappears, and the remaining pieces shift downward. The game ends when the stack of pieces reaches the top of the board.
 
-![RunningGameGif.gif](RunningGameGif.gif)
+![RunningGameGif.gif](Resources/RunningGameGif.gif)
 ### Basic Rules of Tetris
 - **Game Board:** A grid-based playing field, typically 10 columns wide and 20 rows tall.
 
 
 - **Tetriminos:** Seven different shapes (I, J, L, O, S, T, Z) that can be rotated and moved left or right.
 
-    ![Tetriminos.png](Tetriminos.png)
-
+    ![Tetriminos.png](Resources/Tetriminos.png)
 
 - **Goal:** Arrange pieces to form complete rows, which are then cleared for points.
 
 
+- **Scoring:**
+  - 40 points for a 'Single' (one row)
+  - 100 points for a 'Double' (two rows)
+  - 300 points for a 'Triple' (three rows)
+  - 1200 points for a 'Tetris' (four rows)
+
+
 - **Game Over:** The game ends when the stack of pieces reaches the top of the board and no more moves can be made.
+
+---
 
 ## Problem Definition
 
@@ -43,6 +51,8 @@ The primary challenge of creating an AI for Tetris lies in developing an algorit
 
 - **Computational Efficiency:** Since new pieces appear continuously and must be placed in real-time, the AI must operate within strict time constraints to ensure smooth gameplay without lag.
 
+---
+
 ## Project Overview
 ### Goal of the Project
 
@@ -56,14 +66,20 @@ To understand how to build the AI, we first reviewed various articles on Tetris 
 Based on our research and manual gameplay, we identified four key board features that are crucial for an effective Tetris-playing AI. These features help in evaluating the board state and making informed placement decisions:
 
 - **Max Height:** This refers to the tallest occupied column on the board. A high max height increases the risk of game over, so the AI should aim to minimize it.
-![Max_Height.png](Max_Height.png)
+![Max_Height.png](Resources/Max_Height.png)
 - **Bumpiness:** The sum of height differences between adjacent columns. A board with high bumpiness makes it harder to place pieces smoothly, increasing the chances of creating unfillable gaps.
-![Bumpiness.png](Bumpiness.png)
+![Bumpiness.png](Resources/Bumpiness.png)
 - **Holes:** Empty spaces that are covered by at least one block above them. These are particularly problematic since they cannot be cleared until the covering blocks are removed.
-![Holes.png](Holes.png)
+![Holes.png](Resources/Holes.png)
 - **Number of Cleared Rows:** The number of full lines removed after a piece placement. Clearing rows is the primary way to keep the board manageable and earn points.
 
 By incorporating these features as weights into our GA, we enabled it to make better strategic decisions when selecting placements for new pieces.
+
+Our program allows the user to play alone, play with the AI player or just watch how the AI optimal player we've found play.
+
+![Human_vs_ai.png](Resources/Human_vs_ai.png)
+
+---
 
 ## Genetic Algorithm (GA) Implementation Overview
 
@@ -91,7 +107,7 @@ Our AI uses Genetic Algorithms (GA) to learn how to play Tetris by continuously 
 
 This iterative process allows the AI to refine its gameplay over time, adapting its decision-making by refining the weights of the individual through each iteration. By continuously evolving, the AI can optimize its strategy for long-term survival and higher scores in Tetris.
 
-![5_games_GA.gif](5_games_GA.gif)
+![5_games_GA.gif](Resources/5_games_GA.gif)
 
 Now we need to implement a method to scan the board and find the best placement of the next piece that is dropping, evaluating each location in the board based of the individual's weights.
 
@@ -112,7 +128,7 @@ The algorithm follows a systematic approach to determining the optimal placement
 
 - **Limited exploration**: The algorithm places the new piece only on top of the columns, thus missing some options to 'slide under' the new piece below the existing Tetriminos. Limiting the possible moves that are explored and there is no grantee the algorithm will pick the best possible move.
 
-![col_scan.gif](col_scan.gif)
+![col_scan.gif](Resources/col_scan.gif)
 
 ## Breadth-First Search (BFS)
 
@@ -136,7 +152,7 @@ The simple solver only considers immediate piece placement without evaluating mo
 
 - **Slower Decision-Making:** While BFS finds better placements, it takes longer to compute, making it less suitable for real-time constraints in some implementations.
 
-![slow_bfs.gif](slow_bfs.gif)
+![slow_bfs.gif](Resources/slow_bfs.gif)
 
 By using BFS, our AI achieves a more nuanced understanding of the game, leading to improved decision-making in complex scenarios.
 
@@ -150,9 +166,9 @@ We implemented several optimizations that enhanced performance and reduced compu
 
 One of the major bottlenecks in our initial BFS implementation was the exhaustive search of all possible placements, leading to high computation times. To address this, we optimized BFS by **limiting the search depth to six rows above the maximum height** of the board. This reduced the number of evaluated states and cut BFS execution time by approximately **70%**, significantly improving real-time performance without sacrificing decision quality.
 
-![fast_bfs.gif](fast_bfs.gif) ![slow_bfs.gif](slow_bfs.gif)
+![fast_bfs.gif](Resources/fast_bfs.gif) ![slow_bfs.gif](Resources/slow_bfs.gif)
 
-![depth_limitation_graph.png](depth_limitation_graph.png)
+![depth_limitation_graph.png](Resources/depth_limitation_graph.png)
 
 ### Hyperparameter Optimization in GA
 
@@ -161,9 +177,9 @@ To enhance learning efficiency, we fine-tuned the hyperparameters of our **Genet
 - **Mutation Rate**: Adjusted to maintain diversity while ensuring convergence. After testing hours of games we found that mutation of 0.35 and arity of 10 helps the learning proccess grow. 
 - **Crossover Probability**: Tuned to balance exploration and exploitation. After long research we found out that crossover of 0.65 and arity of 2 helps the learning GA.
 - **Tournament Selection Parameters**: Optimized selection pressure to ensure strong individuals continue while maintaining population diversity.
-- **Elitism Rate**: The individuals that are passed to the next generation, and from them we do the crossovers and mutations. we maintain 0.2 of the best Individuals.
+- **Elitism Rate**: The individuals that are passed to the next generation, and from them we do the crossovers and mutations. we maintain 0.3 of the best Individuals.
 
-[ADD GRAPH SHOWING THE EXPIREMENTS. WRITE THE VALUES WE ENDED UP WITH]
+[ADD short expirments ADD GRAPH SHOWING THE EXPIREMENTS. WRITE THE VALUES WE ENDED UP WITH]
 
 These refinements improved the AI’s learning process, leading to more consistent and effective gameplay strategies.
 
@@ -177,16 +193,19 @@ We experimented with an additional heuristic: **hole difference calculation**, w
 
 By implementing these optimizations, we improved both the efficiency and strategic depth of our AI, allowing it to make better decisions in real time while reducing unnecessary computation.
 
+---
 
 ## Experiments & Results
 ### How We Tested the AI
-- BFS and GA were tested on multiple game runs.
+-  We used the `TetrisGeneticAlgorithm` class to run the genetic algorithm process with the wanted parameters. This class allowed us to execute the GA, gain logs of each generation, and analyze the results through graphs.
 - We measured scores, cleared lines, and survival duration.
 
 ### Experimental Findings
 - **Graphs comparing BFS with GA performance.**
 - **Insights on when each approach performs best.**
+- **the optimal weights are _______________________.**
 
+---
 
 ## **Code Overview**
 
@@ -236,8 +255,8 @@ By implementing these optimizations, we improved both the efficiency and strateg
 #### • `AIBrain.py`
 
 - Calculates the best moves when needed, using heuristics.
-- `find_best_placement`: Uses BFS to explore and evaluate moves for optimal shape placement.
-
+- `find_best_placement_bfs`: Uses BFS to explore and evaluate moves for optimal shape placement.
+- `find_best_placement_column_scan`: Uses the column scan method to explore and evaluate moves for simpler and faster placements.
 
 
 ### **Gameplay Modules**
@@ -245,9 +264,17 @@ By implementing these optimizations, we improved both the efficiency and strateg
 #### • `GameSetup.py`
 
 - Handles the game loop and AI interaction.
-- Supports human vs AI gameplay and AI-only mode.
-- `run_tetris_game`: Runs the game in AI-only mode and returns the score.
+- Supports human vs AI gameplay, AI-only mode and human-only mode.
+- `run_tetris_game`: Runs the game and returns the score.
 - Uses Pygame for rendering graphical elements.
+
+#### • `HumanHandler.py`
+
+- Defines HumanHandler class that manages human play and listening for input keyboard presses for actions.
+
+#### • `AIHandler.py`
+
+- Defines AIHandler class that manages the AI play with AIAgent instance that holds the weights through which the AI Agent manages its game strategy.
 
 #### • `Display.py`
 
@@ -272,6 +299,15 @@ By implementing these optimizations, we improved both the efficiency and strateg
 
 ---
 
+### **Eckity Framework**
+Eckity is a Python framework designed for building genetic algorithms, providing the structure for individuals, populations, and genetic operations like selection, crossover, and mutation. It serves as the foundational framework in our project, allowing us to implement and customize a genetic algorithm to optimize the performance of the Tetris AI.
+
+In our implementation, we extended Eckity's core components to tailor them for Tetris optimization. Specifically, we enhanced the genetic operations (selection, crossover, and mutation) for evolving AI weights. We also customized the evaluator to simulate Tetris games and assess the performance of AI agents based on their weight configurations.
+
+By using the Eckity framework and adjusting this custom features, we were able to create a system that evolves Tetris-playing AI agents and optimizes their performance through genetic algorithms.
+
+---
+
 ### **Project Summary**
 
 This project implements **Tetris AI using a genetic algorithm**. The AI improves by **evolving weights** over multiple generations. The AI plays Tetris by **evaluating board states** using heuristics. The game supports **human vs AI** and **AI-only modes** with **graphical rendering**.
@@ -279,31 +315,33 @@ This project implements **Tetris AI using a genetic algorithm**. The AI improves
 
 
 
-
+---
 ## Future Improvements & Conclusions
-### Alternative AI Approaches
+### Improvements
 - Exploring Reinforcement Learning for better long-term strategy.
-- needed complex claculation force to leran faster. each change in hyper paramters takes hours of runing  TODO
+- We are currently running our genetic algorithm on 10 proccess's, but each learning cycle with generations takes hours due to the complexity of the calculations. To speed up the learning process, we need more powerful computing resources, such as a powerful GPU or AWS instances, to handle the intensive computations required for optimizing hyperparameters efficiently.
 
 ### Conclusions
-- The AI game solver playes better and faster then the human (probblay better then the best tetris player in the world). the scores reach more then score of 100,000 *without calculting score that grow with levels
-- Using different processors without graphics is needed to shorter each generation running time.
-- Finding the hyper paramters for the GA aboulatuon is the main problem based on calaculation time and complexity.
+- The AI game solver plays better and faster than a human—likely even better than the best Tetris players in the world. The scores exceed **3,000,000 points** without counting the additional score increases from level progression.
+- Using multiple processors without relying on CPUs is necessary to reduce the runtime of each generation.
+- Tuning the hyperparameters for the genetic algorithm is the main challenge due to the high computational cost and complexity.
+- The results showed that the column-scan algorithm performed better than the BFS-based scan, despite being a simpler approach. This was surprising, as BFS is generally expected to explore a more diverse range of placements. The column-scan method's effectiveness suggests that directly evaluating placements in a structured manner may lead to better optimization in this scenario.
 
+---
 ## How to Use
 ### Installation & Running the Game
 ```bash
 pip install pygame numpy eckity
-python GameSetup.py  # Run player mode
+python GameSetup.py  # Run player/optimal_ai mode
 python TetrisGeneticAlgorithm.py  # Run GA-based AI
 ```
 
 ## References
+- [EC-Kity tool kit](https://github.com/ec-kity/ec-kity)
 - [Genetic Algorithm in AI](https://www.mdpi.com/2078-2489/10/12/390)
-- [Tetris AI Mechanics](https://tetris.fandom.com/wiki/Tetris_AI)
+
+
 
 ## License
-Specify license type here.
-
 For further improvements and contributions, feel free to fork and contribute!
 
