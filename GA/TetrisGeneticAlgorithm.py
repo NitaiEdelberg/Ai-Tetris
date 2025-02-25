@@ -33,7 +33,7 @@ def setup_logging() -> tuple[QueueListener, multiprocessing.Queue]:
         - log_queue: A multiprocessing queue used for logging messages.
     """
     log_queue = multiprocessing.Queue()
-    file_handler = logging.FileHandler('tetris_ga_col.log')
+    file_handler = logging.FileHandler('test.log')
     console_handler = logging.StreamHandler()
 
     log_format = logging.Formatter('%(asctime)s - %(processName)s - %(threadName)s - %(message)s')
@@ -61,7 +61,7 @@ class TetrisGeneticAlgorithm:
     It evolves a population of AI agents using selection, crossover, and mutation.
     """
 
-    def __init__(self, population_size: int = 50, generations: int = 5):
+    def __init__(self, population_size: int = 20, generations: int = 10):
         """
         Initialize the genetic algorithm parameters.
 
@@ -90,7 +90,7 @@ class TetrisGeneticAlgorithm:
                     WeightMutation(probability=0.35, arity=10)
                 ],
                 selection_methods=[(TournamentSelection(tournament_size=3, higher_is_better=True), 1)],
-                elitism_rate=0.3
+                elitism_rate=0.1
             ),
             population_evaluator=PopulationEvaluator(),
             breeder=SimpleBreeder(),

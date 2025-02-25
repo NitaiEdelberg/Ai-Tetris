@@ -2,28 +2,40 @@
 
 ![Tetris_AI_logo.png](Resources/Tetris_AI_logo.png)
 
-#### By Nitai Edelberg & Ido Toker
+### By Nitai Edelberg & Ido Toker
 
+# Project Summary
+This project implements Tetris AI using a genetic algorithm. The AI improves by evolving weights over multiple generations. The AI plays Tetris by evaluating board states using heuristics. The game supports human vs AI and AI-only modes with graphical rendering.
+
+![RunningGameGif.gif](Resources/RunningGameGif.gif)
+
+---
 # Introduction
+
 ### What is Tetris?
 Tetris is a classic puzzle game created by Alexey Pajitnov in 1984. The objective of the game is to manipulate falling geometric shapes called Tetriminos to create and clear full horizontal lines on the board. When a line is cleared, it disappears, and the remaining pieces shift downward. The game ends when the stack of pieces reaches the top of the board.
 
-![RunningGameGif.gif](Resources/RunningGameGif.gif)
+
 ### Basic Rules of Tetris
 - **Game Board:** A grid-based playing field, typically 10 columns wide and 20 rows tall.
 
 
 - **Tetriminos:** Seven different shapes (I, J, L, O, S, T, Z) that can be rotated and moved left or right.
 
-    ![Tetriminos.png](Resources/Tetriminos.png)
+
+![Tetriminos.png](Resources/Tetriminos.png)
 
 - **Goal:** Arrange pieces to form complete rows, which are then cleared for points.
 
 
 - **Scoring:**
+
   - 40 points for a 'Single' (one row)
+
   - 100 points for a 'Double' (two rows)
+
   - 300 points for a 'Triple' (three rows)
+  
   - 1200 points for a 'Tetris' (four rows)
 
 
@@ -43,9 +55,6 @@ The primary challenge of creating an AI for Tetris lies in developing an algorit
 - **Scoring Optimization:** The AI must strike a balance between clearing lines quickly for immediate points and strategically setting up future moves for prolonged survival and higher overall scores.
 
 
-- **Handling Uncertainty:** The AI does not know which pieces will appear next, requiring it to develop strategies that minimize the risk of unfavorable upcoming pieces.
-
-
 - **Complexity of Board Evaluation:** Unlike static board games, Tetris requires an AI to analyze an ever-changing board state, making it difficult to find universally optimal strategies.
 
 
@@ -61,27 +70,28 @@ For the learning process, we used Genetic Algorithms (GA), which evolve AI strat
 
 ### Research Process
 
-To understand how to build the AI, we first reviewed various articles on Tetris AI, including research on heuristic-based strategies and evolutionary algorithms[add references]. Additionally, we implemented a human-controlled gameplay mode using keyboard inputs to analyze common strategies.
+To understand how to build the AI, we first reviewed various articles on Tetris AI, including research on heuristic-based strategies and evolutionary algorithms. Additionally, we implemented a human-controlled gameplay mode using keyboard inputs to analyze common strategies.
 
 Based on our research and manual gameplay, we identified four key board features that are crucial for an effective Tetris-playing AI. These features help in evaluating the board state and making informed placement decisions:
 
 - **Max Height:** This refers to the tallest occupied column on the board. A high max height increases the risk of game over, so the AI should aim to minimize it.
+
 ![Max_Height.png](Resources/Max_Height.png)
 - **Bumpiness:** The sum of height differences between adjacent columns. A board with high bumpiness makes it harder to place pieces smoothly, increasing the chances of creating unfillable gaps.
+
 ![Bumpiness.png](Resources/Bumpiness.png)
 - **Holes:** Empty spaces that are covered by at least one block above them. These are particularly problematic since they cannot be cleared until the covering blocks are removed.
+
 ![Holes.png](Resources/Holes.png)
 - **Number of Cleared Rows:** The number of full lines removed after a piece placement. Clearing rows is the primary way to keep the board manageable and earn points.
 
 By incorporating these features as weights into our GA, we enabled it to make better strategic decisions when selecting placements for new pieces.
 
-Our program allows the user to play alone, play with the AI player or just watch how the AI optimal player we've found play.
-
 ![Human_vs_ai.png](Resources/Human_vs_ai.png)
 
 ---
 
-## Genetic Algorithm (GA) Implementation Overview
+## Genetic Algorithm Implementation Overview
 
 Our AI uses Genetic Algorithms (GA) to learn how to play Tetris by continuously improving its decision-making through iterative learning over multiple generations that we are running over serval processing cores (since we didn't have access to GPU). The key components of our GA approach are:
 
@@ -103,7 +113,7 @@ Our AI uses Genetic Algorithms (GA) to learn how to play Tetris by continuously 
 - **Mutation:** Small, random modifications are applied to weights to introduce diversity and explore new strategies. We use Gaussian mutation, where a small random value is added to an existing weight, sampled from a normal distribution centered at zero with a standard deviation proportional to the original weight. This ensures that the AI continues refining its decision-making without overfitting to a specific playstyle.
 
 
-- **Termination:** The GA runs for a predefined number of generations of a score threshold is reached.
+- **Termination:** The GA runs for a predefined number of generations or a score threshold is reached.
 
 This iterative process allows the AI to refine its gameplay over time, adapting its decision-making by refining the weights of the individual through each iteration. By continuously evolving, the AI can optimize its strategy for long-term survival and higher scores in Tetris.
 
@@ -111,37 +121,20 @@ This iterative process allows the AI to refine its gameplay over time, adapting 
 
 Now we need to implement a method to scan the board and find the best placement of the next piece that is dropping, evaluating each location in the board based of the individual's weights.
 
-## Column Scanner
-The algorithm implements a straightforward brute-force approach to determining the best move for a given Tetris piece. The algorithm iterates over all possible rotations and placements of the current shape, evaluating each configuration based on a heuristic score.
+---
 
-### **How It Works**
-
-The algorithm follows a systematic approach to determining the optimal placement for a Tetris piece. It first explores all possible rotations of the shape, ensuring that every orientation is considered. Once rotated, it evaluates each potential column position where the piece can fit. After identifying valid placements, the piece is simulated to drop to the lowest available row. The resulting board state is then analyzed using our heuristic evaluation metrics. The algorithm tracks the highest-scoring move configuration and stores the sequence of actions required to execute it.
-
-### **Advantages**
-
-- **Simple:** The solver explores most of the possible placements, ensuring it finds a reasonable move given the heuristic evaluation.
-- **Effective**: The algorithm places the shapes in the possible placement without simulating the way to get there, thus saving a lot of computing time.
-- **Deterministic:** Always chooses the same move for a given board state, making it predictable and easy to debug.
-
-### **Limitations**
-
-- **Limited exploration**: The algorithm places the new piece only on top of the columns, thus missing some options to 'slide under' the new piece below the existing Tetriminos. Limiting the possible moves that are explored and there is no grantee the algorithm will pick the best possible move.
-
-![col_scan.gif](Resources/col_scan.gif)
 
 ## Breadth-First Search (BFS)
 
-To improve upon the Column Scanner, that can miss placements that aren't at the top of a column ,we implemented BFS, which explores all possible placements for a given piece, **including sliding into gaps**. The BFS algorithm identify all the possible moves and records the way to the best placement during the run.
-
-### **Why BFS Instead of the Simple Solver?** 
-The simple solver only considers immediate piece placement without evaluating more complex moves, such as sliding pieces into better positions. The BFS allows the AI to search deeper into the board's state space, considering all the possible placements available on the board, thus significantly enhances AI performance by ensuring more strategic placements and reducing the number of trapped spaces.
+We implemented an algorithm that works like a BFS, which explores all possible placements for a given piece, including sliding into gaps. The BFS algorithm identify all the possible moves and records the way to the best placement during the run.
 
 ### **Advantages:**
 
 - **Guarantees the best move:** Always finds the best move possible because it explores all the valid positions on the board.
 
+
 - **Handles Complex Moves:** Finds placements involving slides and rotations that a simple height-based solver would miss.
+
 
 - **Records Best Moves**: Unlike the Column Scanner, the BFS always saves the way it traversed to get to the best placement. Which means we don't need to calculate the path to the best placement separately. This approach simulates a more realistic gameplay.
 
@@ -156,11 +149,40 @@ The simple solver only considers immediate piece placement without evaluating mo
 
 By using BFS, our AI achieves a more nuanced understanding of the game, leading to improved decision-making in complex scenarios.
 
+## Column Scanner
+Due to the BFS algorithm mediocre performance (see the experiment & results segment) we implemented simpler and faster algorithm to see if it will work better.
+
+The 'Column Scanner' algorithm implements a straightforward approach to determining the best move for a given Tetris piece. The algorithm iterates over all possible rotations and placements of the current shape on top of each column, evaluating each configuration based on a heuristic score.
+
+### **How It Works**
+
+The algorithm follows a systematic approach to determining the optimal placement for a Tetris piece. It first explores all possible rotations of the shape, ensuring that every orientation is considered. Once rotated, it evaluates each potential column position where the piece can fit. After identifying valid placements, the piece is simulated to drop to the lowest available row. The resulting board state is then analyzed using our heuristic evaluation metrics. The algorithm tracks the highest-scoring move configuration and stores the sequence of actions required to execute it.
+
+### **Advantages**
+
+- **Simple:** The solver explores most of the possible placements, ensuring it finds a reasonable move given the heuristic evaluation.
 
 
+- **Effective**: The algorithm places the shapes in the possible placement without simulating the way to get there, thus saving a lot of computing time.
+
+
+- **Deterministic:** Always chooses the same move for a given board state, making it predictable and easy to debug.
+
+### **Limitations**
+
+- **Limited exploration**: The algorithm places the new piece only on top of the columns, thus missing some options to 'slide under' the new piece below the existing Tetriminos. Limiting the possible moves that are explored and there is no grantee the algorithm will pick the best possible move.
+
+![col_scan.gif](Resources/col_scan.gif)
+
+
+---
 ## Optimizations
 
 We implemented several optimizations that enhanced performance and reduced computational costs.
+
+### GA simulation without graphics
+
+We added the option to run the GA simulation without the Pygame graphics, using only logs and reports. This reduced the runtime by around **80%**.
 
 ### Limiting Search Depth of BFS
 
@@ -175,17 +197,24 @@ One of the major bottlenecks in our initial BFS implementation was the exhaustiv
 To enhance learning efficiency, we fine-tuned the hyperparameters of our **Genetic Algorithm (GA)**. Key adjustments included:
 
 - **Mutation Rate**: Adjusted to maintain diversity while ensuring convergence. After testing hours of games we found that mutation of 0.35 and arity of 10 helps the learning proccess grow. 
+
+
 - **Crossover Probability**: Tuned to balance exploration and exploitation. After long research we found out that crossover of 0.65 and arity of 2 helps the learning GA.
+
+
 - **Tournament Selection Parameters**: Optimized selection pressure to ensure strong individuals continue while maintaining population diversity.
+
+
 - **Elitism Rate**: The individuals that are passed to the next generation, and from them we do the crossovers and mutations. we maintain 0.3 of the best Individuals.
 
-[ADD short expirments ADD GRAPH SHOWING THE EXPIREMENTS. WRITE THE VALUES WE ENDED UP WITH]
+(see experiments below)
+
 
 These refinements improved the AI’s learning process, leading to more consistent and effective gameplay strategies.
 
-### Adding Shape Placement
+### Experimenting with Shape Placement
 
-Previously, our AI evaluated board states using four primary weights: bumpiness, max height, holes, and cleared rows. To improve placement decision-making, we introduced a fifth weight called shape placement. This weight measures how low a newly placed shape lands on the board, encouraging more compact stacking and reducing the likelihood of creating inaccessible gaps.
+Previously, our AI evaluated board states using four primary weights: bumpiness, max height, holes, and cleared rows. To improve placement decision-making, we added a fifth weight called shape placement. This weight measures how low a newly placed shape lands on the board, encouraging more compact stacking. After running the model with this fifth weight we found out that this weight is redundant and it similar to bumpiness - they have the same effect.
 
 ### Experimenting with Hole Difference Calculation
 
@@ -198,12 +227,88 @@ By implementing these optimizations, we improved both the efficiency and strateg
 ## Experiments & Results
 ### How We Tested the AI
 -  We used the `TetrisGeneticAlgorithm` class to run the genetic algorithm process with the wanted parameters. This class allowed us to execute the GA, gain logs of each generation, and analyze the results through graphs.
+
+
 - We measured scores, cleared lines, and survival duration.
 
 ### Experimental Findings
-- **Graphs comparing BFS with GA performance.**
-- **Insights on when each approach performs best.**
-- **the optimal weights are _______________________.**
+**Notice** : The following experiments are shorter than we wanted due to our limited computation power. Each experiment required long hours (some more than 24 hours) of runtime due to the high game results.
+
+### BFS experiments
+
+#### Experiment's Data
+
+![fitness_plot_20_10.png](Resources/fitness_plot_BFS_20_10.png)
+
+![fitness_plot_30_10.png](Resources/fitness_plot_BFS_30_10.png)
+
+![fitness_plot_50_10.png](Resources/fitness_plot_BFS_50_10.png)
+
+#### BFS Insights
+
+- For the BFS algorithm Larger populations achieve better results – The 50-population experiment produced the highest fitness scores, showing that a larger gene pool helps evolve stronger solutions.
+
+
+- More stable improvement with larger populations – The 50-population experiment showed steady progress, while the 20-population case had fluctuations and inconsistent growth and the 30-population improved over time but had some fluctuations, especially after generation 7.
+
+
+- Smaller populations struggle with weak individuals – The worst fitness scores were lower in larger populations, indicating that smaller populations suffer more from poor-performing individuals.
+
+
+- Smaller populations converge faster but less effectively – The 20-population experiment improved quickly but plateaued early, while the 50-population case took longer to evolve but achieved superior results.
+
+### Column Scan Experiments
+
+#### Experiment's Data
+Each experiment required even longer hours of runtime than the BFS, due to the high-quality game results, in some point they reached over 10,000,000 points (a single game's simulation with such results takes over an hour):
+
+![fitness_plot_Col_20_10.png](Resources/fitness_plot_Col_20_10.png)
+
+![fitness_plot_Col_30_10.png](Resources/fitness_plot_Col_30_10.png)
+
+![fitness_plot_Col_50_10.png](Resources/fitness_plot_Col_50_10.png)
+
+#### Column scan Insights
+
+- Column scan results show higher fitness scores compared to BFS, suggesting that this approach may be more effective in finding optimal solutions. However, the column scan results appear less stable than the BFS results, as indicated by the fact that the 20-population run preformed way better than the 30 and the 50 population runs, probably due to a few strong individuals at the first generation and small population.
+
+
+- Larger populations provide more stable progression – The 50-population experiment exhibited smoother and more consistent improvements in fitness scores, while the 20-population case had significant fluctuations and abrupt jumps in performance. The 30-population experiment showed a balance, with some variability, particularly after generation 7.
+
+
+- Smaller populations evolve more quickly but are more likely to plateau – The 20-population experiment reached high fitness early but showed signs of plateauing, while the 50-population case took longer to evolve but demonstrated a more reliable trajectory toward long-term improvement. The 30-population case offered a middle ground, balancing speed and stability.
+
+### Hyper parameters experiments
+
+To check convergence, we limited each game to a maximum of 2,500 Terminos that can be placed on the board.
+#### Experiment's Data
+![cors_95_mut_5.png](Resources/cors_95_mut_5.png)
+
+Converge in generation 7-8.
+Best score: 53,660
+
+![cors_85_mut_15.png](Resources/cors_85_mut_15.png)
+
+Converge in generation 11-12.
+Best score: 55,040 
+
+![cros_75_mut_25.png](Resources/cros_75_mut_25.png)
+
+Converge in generation 14-15.
+Best score: 56,056
+
+![cros_65_mut_35.png](Resources/cros_65_mut_35.png)
+
+Converge in generation 17-18.
+Best score: 56,772 
+
+#### Experiment's Insights
+
+Analyzing different mutation and crossover probabilities highlighted their varying effects on convergence speed and solution quality. Lower mutation rates, like 0.05, with high crossover rates, like 0.95, enabled faster convergence, reaching the optimal in around 7 generations. In contrast, higher mutation rates, such as 0.25 and 0.35, and lower crossover rates, such as 0.75 and 0.65, prolonged the convergence process, requiring more generations to attain the best solution.
+
+### Overall Findings
+
+- The optimal weights are **[-0.1734635637226034, -0.031100166230100215, -0.8795480715944236, 0.18896266945641163]** (Bumpiness, Max height, Holes, Cleared rows)
 
 ---
 
@@ -268,6 +373,10 @@ By implementing these optimizations, we improved both the efficiency and strateg
 - `run_tetris_game`: Runs the game and returns the score.
 - Uses Pygame for rendering graphical elements.
 
+#### • `AIGameSimulator.py`
+
+- Defines the function `run_tetris_game` that runs the AI simulation in the GA. The function run_tetris_game defines the game loop for the AI player. It receives an AI agent and a maximum number of pieces in a game to limit the run due to high scores and high computation time.
+
 #### • `HumanHandler.py`
 
 - Defines HumanHandler class that manages human play and listening for input keyboard presses for actions.
@@ -308,23 +417,21 @@ By using the Eckity framework and adjusting this custom features, we were able t
 
 ---
 
-### **Project Summary**
-
-This project implements **Tetris AI using a genetic algorithm**. The AI improves by **evolving weights** over multiple generations. The AI plays Tetris by **evaluating board states** using heuristics. The game supports **human vs AI** and **AI-only modes** with **graphical rendering**.
-
-
-
-
----
 ## Future Improvements & Conclusions
 ### Improvements
 - Exploring Reinforcement Learning for better long-term strategy.
-- We are currently running our genetic algorithm on 10 proccess's, but each learning cycle with generations takes hours due to the complexity of the calculations. To speed up the learning process, we need more powerful computing resources, such as a powerful GPU or AWS instances, to handle the intensive computations required for optimizing hyperparameters efficiently.
+- We are currently running our genetic algorithm on 10 proccess's, but each learning cycle with generations takes **many hours** due to the complexity and the large quantity of the calculations. To speed up the learning process, we need more powerful computing resources, such as a powerful GPU or AWS instances, to handle the intensive computations required for optimizing hyperparameters efficiently.
 
 ### Conclusions
-- The AI game solver plays better and faster than a human—likely even better than the best Tetris players in the world. The scores exceed **3,000,000 points** without counting the additional score increases from level progression.
+- The AI game solver plays better and faster than a human. The scores exceed **10,000,000 points**. This incredibly high score was recorded in the 7th generation of the Column Scan algorithm.
+
+
 - Using multiple processors without relying on CPUs is necessary to reduce the runtime of each generation.
+
+
 - Tuning the hyperparameters for the genetic algorithm is the main challenge due to the high computational cost and complexity.
+
+
 - The results showed that the column-scan algorithm performed better than the BFS-based scan, despite being a simpler approach. This was surprising, as BFS is generally expected to explore a more diverse range of placements. The column-scan method's effectiveness suggests that directly evaluating placements in a structured manner may lead to better optimization in this scenario.
 
 ---
